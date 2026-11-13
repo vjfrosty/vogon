@@ -1,20 +1,31 @@
 ---
 name: critique
-description: Use when the user wants an independent, skeptical second opinion on a plan, design doc, proposal, decision, diff or commit range before committing to it or shipping it, wants it scored, or wants it fixed and re-reviewed until it passes.
-disable-model-invocation: true
+description: Independent, skeptical second opinion on a plan, design doc, proposal, decision, commit, diff or work in progress, scored 1-10, with an optional loop that fixes and re-reviews until it scores 8. Use whenever the user asks to critique something, wants a second opinion, a devil's advocate, a skeptical or adversarial review, asks "what's wrong with this", "poke holes in", "tear apart", "sanity-check", "score", "rate" or "grade" a plan, change or doc, asks "is this ready" before committing, shipping or opening a pull request, or asks to fix something "until it passes". Not for routine edits, explaining code, or a review the user asked to do with another named tool.
 allowed-tools: Agent, Read, Grep, Glob, Bash, Write, Edit
 ---
 
 # Critique
 
-One fresh Opus critic reviews the target without this conversation's reasoning. You verify what it says, score the target 1–10 from the verified findings, and hand the user a ledger. In `fix` mode you also fix what is yours to fix and loop until the score reaches 8.
+A fresh critic, on Opus unless the user chooses otherwise, reviews the target without this conversation's reasoning. You verify what it says, score the target 1–10 from the verified findings, and hand the user a ledger. In `fix` mode you also fix what is yours to fix and loop until the score reaches 8. In `ask` mode you only pass on the critic's answer.
 
 **Arguments:** `$ARGUMENTS`
 - `<target>` — path, directory, commit range or topic. Review only (steps 1–5).
+- `ask <target or question>` — the critic's answer only: no verification, ledger, score or archive (step 8).
 - `fix <target>` — review, then fix and re-review until score ≥ 8 (step 6), asking once per round before fixes are applied.
 - `fix auto <target>` — the same loop without asking: questions only the user can answer become marked proposals.
 - `recheck [ledger path]` — one focused re-review of the newest ledger for this project (step 7). No fixes.
-- Optional anywhere: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`.
+- Optional anywhere: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`, `model: <opus | sonnet | haiku | session>` (default `opus`).
+
+**Without a slash.** When the user asks in their own words, read the mode from them; if the mode is unclear, use review.
+
+| The user says | Mode |
+|---|---|
+| "critique", "second opinion", "review skeptically", "score / rate / grade it", "is this ready" | review |
+| "quick take", "what would a critic say", "poke holes in", "devil's advocate", "just the critic" | `ask` |
+| "fix it until it passes / scores 8", "critique and fix" | `fix` |
+| the same, plus "automatically", "without asking", "don't ask me" | `fix auto` |
+| "check again", "re-check", "did I fix it" after a ledger | `recheck` |
+| "use my model", "this model", "same model as me" | `model: session` |
 
 ## 1. Resolve the target
 
@@ -39,7 +50,7 @@ Decisions the critic must not re-raise, one bullet each with its source. Take wh
 
 ## 3. Spawn the critic
 
-One Agent call: `subagent_type: "general-purpose"`, `model: "opus"`. Prompt = the full text of `critic_prompt.md` (next to this file), then:
+One Agent call: `subagent_type: "general-purpose"`, with `model` set from the `model:` option: `"opus"` by default, the named model when given, and no `model` parameter at all for `session` (the critic then runs on the session's model). Use the same model for every critic in the run. Prompt = the full text of `critic_prompt.md` (next to this file), then:
 
 ```
 Review target: <target>
@@ -110,3 +121,13 @@ Final reply: the score per round (`3 → 6 → 8`), what was fixed, the proposal
 ## 7. Recheck (`/critique recheck`)
 
 After the user has acted on a ledger: load it (the newest for this project, or the path given), run one focused re-review against the diff since the ledger's date or commit, verify, score, and append `## Recheck` to the same ledger. Reply with the score and the ids still open. No fixes.
+
+## 8. Ask (`/critique ask`)
+
+A quick opinion while working. Resolve the target (step 1), skip the settled list unless the user gave one, and spawn the critic (step 3) with this line after the target block:
+
+```
+Quick opinion: give at most 5 findings, most severe first, in the usual format, and skip the score line.
+```
+
+Pass on the critic's answer as it is, under one line naming the critic's model. Do not verify, score, archive or fix. End with one line: `For a verified, scored ledger: /critique <target>`.

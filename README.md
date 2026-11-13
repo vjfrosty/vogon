@@ -38,30 +38,44 @@
 ## Quick start
 
 ```bash
-git clone https://github.com/vjfrosty/critique-skill ~/.claude/skills/critique
+git clone https://github.com/vjfrosty/critique-skill "$HOME/.claude/skills/critique"
 ```
 
-Then, in Claude Code, in any project:
+(On Windows, see [Install](#install).) Then just ask, in any project. No slash needed:
+
+```
+> poke holes in docs/plans/migration.md
+> give me a second opinion on my uncommitted changes
+> is my branch ready for a PR?
+> rate this design doc 1 to 10
+> quick take: what would a critic say about the retry logic?
+> critique my changes and fix them until they pass, don't ask me
+```
+
+Claude picks the skill and the mode from your words. Or use the command directly:
 
 ```
 /critique docs/plans/migration.md          review and score a plan
 /critique my changes                       review your uncommitted work
 /critique HEAD~3..HEAD                     review the last three commits
+/critique ask src/retry.ts                 quick take: the critic's findings only, no ledger or score
 /critique fix docs/plans/migration.md      fix and re-review, asking before each round
 /critique fix auto docs/plans/migration.md fix and re-review without asking
 /critique recheck                          one re-check of the last ledger after you acted on it
 ```
 
-Options go anywhere in the arguments: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`.
+Options go anywhere in the arguments: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`, `model: <opus | sonnet | haiku | session>` (the critic's model; default `opus`, `session` uses yours).
 
 ## How it works
 
 ```mermaid
 flowchart TD
-    A["/critique &lt;target&gt;"] --> B["Resolve the target<br/>file · commit range · my changes · task · topic"]
+    U["Your words: 'poke holes in…', 'second opinion', 'is this ready?'<br/>or /critique"] --> MO["Pick the mode<br/>review · ask · fix · fix auto · recheck"]
+    MO --> B["Resolve the target<br/>file · commit range · my changes · task · topic"]
     B -->|ambiguous| ASK1["Ask which one"]
+    B -->|ask| QK["Quick take: one critic,<br/>up to 5 findings, no ledger or score"]
     B --> C["Gather settled decisions<br/>settled: argument · Claude memory · docs/decisions, adr/"]
-    C --> D["Full review by a fresh Claude Opus critic<br/>no conversation context"]
+    C --> D["Full review by a fresh critic<br/>Opus by default, or model: session<br/>no conversation context"]
     D --> V["Validate and verify each finding against the code<br/>verdict: fix · needs-you · taste · wrong · settled"]
     V --> I["Score 1–10 by the fixed rule"]
     I --> J["Archive the ledger<br/>runs/&lt;project&gt;/date-slug.md"]
@@ -74,7 +88,7 @@ flowchart TD
     N -->|fix auto| P["Log the plan; questions for you<br/>become marked proposals"]
     O --> Q["Apply minimal fixes<br/>run tests for code"]
     P --> Q
-    Q --> F["Focused re-review by a fresh Opus critic<br/>previous findings + the diff only"]
+    Q --> F["Focused re-review by a fresh critic<br/>previous findings + the diff only"]
     F --> V
     RC["/critique recheck"] --> F
 ```
@@ -169,19 +183,37 @@ On obvious bugs the skill adds less: on the small module in `evals/`, Claude wit
 
 ## Install
 
+macOS and Linux:
+
 ```bash
-git clone https://github.com/vjfrosty/critique-skill ~/.claude/skills/critique
+git clone https://github.com/vjfrosty/critique-skill "$HOME/.claude/skills/critique"
 ```
 
-On Windows, `~` is `%USERPROFILE%`. Claude Code picks the skill up in every project. To update: `git -C ~/.claude/skills/critique pull`.
+Windows: Claude Code reads skills from `%USERPROFILE%\.claude\skills`. In Git Bash, `~` and `$HOME` can point to a network home drive instead, so name the folder explicitly:
+
+```bash
+git clone https://github.com/vjfrosty/critique-skill "$USERPROFILE/.claude/skills/critique"
+```
+
+```powershell
+git clone https://github.com/vjfrosty/critique-skill "$env:USERPROFILE\.claude\skills\critique"
+```
+
+Claude Code picks the skill up in every project; start a new session after installing. To update, run `git pull` in that folder.
 
 ## FAQ
 
 **Does it change my files?**
 Not in review mode. In `fix` mode it edits the target and runs your tests, but never commits.
 
+**Do I have to type `/critique`?**
+No. Ask in your own words ("poke holes in…", "second opinion on…", "is this ready for a PR?", "rate this 1 to 10") and Claude starts the skill and picks the mode. In a test of 16 requests, run twice each, it started on all 8 that asked for a critique and on none of the 8 that did not (renames, explanations, tests, build errors, typo fixes).
+
 **Which model does it use?**
-The critic is always Claude Opus, whatever model your session uses. The verification and the fixes run on your session's model.
+The critic runs on Claude Opus by default, whatever model your session uses. Add `model: session` (or say "use my model") to run it on your session's model, or name one: `model: sonnet`. The verification and the fixes always run on your session's model. A weaker critic finds fewer real problems, and the fix loop depends on it.
+
+**What is the difference between `ask` and a review?**
+`ask` is a quick take, about a minute: the critic's top findings, passed on as they are. A review also checks every finding against the code, scores the target and saves a ledger.
 
 **Can I review something that is not finished?**
 Yes. Pass `my changes`, a task or PR id, or the plan. The critic is told what is done and what is still planned, so a planned step is not reported as missing. A planned step that cannot work as planned is still reported.

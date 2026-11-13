@@ -6,6 +6,18 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-13
+
+- No slash needed: Claude starts the skill when you ask in your own words ("poke holes in",
+  "second opinion", "is this ready for a PR?", "rate this 1 to 10", "devil's advocate") and picks
+  the mode from them. Tested on 16 requests, twice each: it started on all 8 critique requests
+  and on none of the 8 near-misses.
+- `ask` mode: a quick take, the critic's top five findings with no verification, ledger or score.
+- `model:` option: `opus` (default), `sonnet`, `haiku`, or `session` to run the critic on the
+  session's model.
+- README: install commands that work on Windows, where Git Bash's `~` can point to a network
+  home drive instead of the folder Claude Code reads.
+
 ## [0.1.0] - 2026-11-13
 
 - `/critique <target>`: one fresh Claude Opus critic reviews a plan, design doc, proposal,
@@ -30,5 +42,6 @@ All notable changes are listed here. The format follows
 - Test cases in the `claude plugin eval` layout: `evals/fixes-plan-to-eight` (the fix loop on a
   flawed deploy plan) and `evals/reviews-planted-bugs` (a review of a module with four planted bugs).
 
-[Unreleased]: https://github.com/vjfrosty/critique-skill/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/vjfrosty/critique-skill/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/vjfrosty/critique-skill/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/vjfrosty/critique-skill/releases/tag/v0.1.0

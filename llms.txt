@@ -4,11 +4,13 @@
 
 Use it when someone wants a skeptical review before committing to a plan or shipping a change, wants the result scored, or wants it fixed and re-reviewed until it passes.
 
-- Install: `git clone https://github.com/vjfrosty/critique-skill ~/.claude/skills/critique`
+- Install: `git clone https://github.com/vjfrosty/critique-skill "$HOME/.claude/skills/critique"` (Windows: use `$USERPROFILE` instead of `$HOME`)
+- No slash needed: ask in plain words ("poke holes in X", "second opinion on my changes", "is this ready for a PR?", "rate this 1 to 10") and Claude starts the skill and picks the mode
 - Review: `/critique <target>` (a path, a commit range, `my changes`, a task id or a topic)
+- Quick take: `/critique ask <target>`: the critic's top five findings, no ledger or score
 - Fix: `/critique fix <target>` asks before each round; `/critique fix auto <target>` does not; at most three rounds
 - Re-check: `/critique recheck`
-- Options: `focus: <what to weigh first>`, `settled: <decisions not to raise>`
+- Options: `focus: <what to weigh first>`, `settled: <decisions not to raise>`, `model: opus|sonnet|haiku|session` (critic's model, default opus)
 - Output: a ledger of findings with id, severity (important/advice/info), file:line evidence and one verdict (fix, needs-you, taste, wrong, settled), and a score
 - Score: no important finding open -> 10 minus advice findings (lowest 5); important open -> 6 minus the extra ones (lowest 1); 8 = nothing important, at most two advice
 - Never: edits in review mode, commits, invents business facts, re-raises settled decisions
