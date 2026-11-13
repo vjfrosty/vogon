@@ -50,14 +50,15 @@ First release, as a Claude Code plugin with one skill and one agent.
 - When Claude starts the skill from the user's own words (no `/vogon` and no mention of vogon),
   it asks once before any critic runs: run it, a quick take instead, or answer normally. The
   `critic` agent starts only when the user names it or another skill calls it.
-- Guardrails: the critic quotes the line each finding points at, and the skill checks the quote and
-  records how every finding was checked; a critique of vogon's own edit is rejected only with a
+- Guardrails: the skill records how every finding was checked (a quoted line is checked by search); a critique of vogon's own edit is rejected only with a
   disproving quote; files changed during a review are reported.
 - Progress lines with each critic's measured time and tokens, ETAs marked as estimates, and a
   totals line.
 - No over-extension: the fix loop prefers rewording or removing, logs lines added and removed per
-  round, and stops once the target has grown, net, by more than about a fifth; the critic reports
-  bloat as `simplify`. The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
+  round, and stops once the target has grown, net, by more than about a fifth; The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
+- The critic is the shorter one that reached 8 on the deploy-plan test: it reached 8 in 2 of 3 runs, while the
+  longer critic (lenses for every review, quotes, bloat hunting) stopped at 6 or 7 in all 6 runs.
+  Lenses are kept, used only when asked for.
 - A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,

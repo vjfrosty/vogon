@@ -1,6 +1,6 @@
 # Fix mode — loop to 8
 
-Read this only in `fix` or `fix auto` mode, after step 5 of SKILL.md. Repeat up to **3 rounds**:
+Read this only in `fix` or `fix auto` mode, after step 5 of SKILL.md. Before the first fix, copy each target file to `.vogon/.tmp/start/<path>` (SKILL.md step 3); the growth check below measures against it. Repeat up to **3 rounds**:
 
 1. **Plan the round:** one line per `fix` finding (`id — what will change, where`), plus every `needs-you` finding.
 2. **Approve.** `fix`: one AskUserQuestion per round showing the plan; the user applies all, picks ids, or stops, and answers any important `needs-you` there. An unapproved `fix` becomes `declined` and leaves the score. `fix auto`: no question; print the plan as the round's log, and for each `needs-you` take the smaller, reversible option as a marked proposal.

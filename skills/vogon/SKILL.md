@@ -2,7 +2,7 @@
 name: vogon
 description: Use when the user wants a critique, second opinion, devil's advocate or skeptical review of a plan, design doc, proposal, decision, commit, diff, documentation or work in progress; asks "what's wrong with this", to "poke holes in", "tear apart" or "sanity-check" it; asks to score, rate or grade it; asks "is this ready", "can I merge / ship this" or wants an approve-or-block verdict; asks "are the docs still right", "do the comments match the code", "what edge cases did I miss" or "check the error handling" about existing work; asks to fix something "until it passes"; or mentions vogon ("vogon this", "run vogon on"). Not for routine edits, explaining code, or a review the user asked to do with another named tool.
 argument-hint: "[stamp | papertrail | loopholes | ask | fix | fix auto | recheck] <target>"
-allowed-tools: Agent, Read, Grep, Glob, Bash, Edit, Write
+allowed-tools: Agent, AskUserQuestion, Read, Grep, Glob, Bash, Edit, Write
 ---
 
 # Vogon
@@ -26,7 +26,7 @@ Take the words from the arguments, or from the user's sentence. One mode, any le
 | lens `papertrail` | `docs`, `comments` | "are the docs still right" | critic checks docs vs. code first |
 | lens `loopholes` | `edges`, `errors`, `holes` | "what edge cases did I miss" | critic checks failure paths first |
 
-A lens combines with any mode. Options: `focus:`, `settled:` (decisions not to raise), `model: session | opus | sonnet | haiku | fable` (default: this conversation's model).
+A lens combines with any mode. Options: `focus:`, `settled:` (decisions not to raise), `model: session | opus | sonnet | haiku | fable` (default `session`: pass no `model`, so the critic uses this conversation's model).
 
 ## 0. Confirm when you started it yourself
 
@@ -76,7 +76,7 @@ A critic that re-reads everything finds new faults in the fixes' text and costs 
 ```
 Focused re-review. Do not review the whole target again.
 1. For each previous finding, answer resolved / still-open (why) / made-worse (why):
-<id | severity | finding>
+<id | severity | finding | the What and Scenario lines from the ledger>
 2. Report new findings only inside these changed lines, or that these changes cause elsewhere:
 <unified diff of the target since the previous review>
 ```
@@ -105,7 +105,7 @@ So 8 means: nothing important, at most two advice. Show the critic's own score b
 
 ## 5. Archive and reply
 
-Write the ledger to `.vogon/<YYYY-MM-DD>-<slug>.md` in the project root (if taken, `-2`, `-3`; the hook refuses overwrites, so later rounds are appended with Edit). The first time, also write `.vogon/.gitignore` containing `*`; leave the user's `.gitignore` and `.git/` alone. Contents: target, reviewed commit (`git rev-parse HEAD`, or "not under git"), lens, focus, settled list, the critic's model, time, tokens and `agentId` (its transcript, `subagents/agent-<agentId>.jsonl` under `~/.claude/projects/`, is deleted eventually), `What looks good`, the table `id | severity | verdict | finding | evidence | checked`, the `What` and `Scenario` lines of each open finding, the score, the totals line, and last:
+Write the ledger to `.vogon/<YYYY-MM-DD>-<slug>.md` in the project root (if taken, `-2`, `-3`; the hook refuses overwrites, so later rounds are appended with Edit). The first time, also write `.vogon/.gitignore` containing `*`; leave the user's `.gitignore` and `.git/` alone. Contents: target, reviewed commit (`git rev-parse HEAD`; with uncommitted changes, `git stash create`, a snapshot commit of the working tree that changes nothing; or "not under git"), lens, focus, settled list, the critic's model, time, tokens and `agentId` (its transcript, `subagents/agent-<agentId>.jsonl` under `~/.claude/projects/`, is deleted eventually), `What looks good`, the table `id | severity | verdict | finding | evidence | checked`, the `What` and `Scenario` lines of each open finding, the score, the totals line, and last:
 
 ```
 ## To do
