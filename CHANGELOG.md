@@ -56,9 +56,6 @@ First release, as a Claude Code plugin with one skill and one agent.
   totals line.
 - No over-extension: the fix loop prefers rewording or removing, logs lines added and removed per
   round, and stops once the target has grown, net, by more than about a fifth; The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
-- The critic is the shorter one that reached 8 on the deploy-plan test: it reached 8 in 2 of 3 runs, while the
-  longer critic (lenses for every review, quotes, bloat hunting) stopped at 6 or 7 in all 6 runs.
-  Lenses are kept, used only when asked for.
 - A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,
