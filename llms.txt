@@ -4,7 +4,7 @@
 
 Use it when someone wants a skeptical review before committing to a plan or shipping a change, wants the result scored, or wants it fixed and re-reviewed until it passes.
 
-- Install: `/plugin marketplace add vjfrosty/critique-skill`, then `/plugin install vogon@vogon`
+- Install: `/plugin marketplace add vjfrosty/vogon`, then `/plugin install vogon@vogon`
 - No command needed: ask in plain words ("poke holes in X", "second opinion on my changes", "is this ready for a PR?", "rate this 1 to 10") and Claude picks the mode and asks once before running it (naming vogon or typing the command skips the question)
 - Review: `/vogon:vogon <target>` (a path, a commit range, `my changes`, a task id or a topic)
 - Merge verdict: `/vogon:vogon stamp <target>` (also `gate`, `verdict`, `inspect`, `audit`): a review plus `APPROVED` (score >= 8, nothing important open) or `DEMOLISHED` with the blocking findings; never fixes
@@ -20,6 +20,6 @@ Use it when someone wants a skeptical review before committing to a plan or ship
 
 ## Docs
 
-- [README](https://github.com/vjfrosty/critique-skill/blob/main/README.md): install, usage, the ledger, the score, fix mode, the agent, FAQ
-- [skills/vogon/SKILL.md](https://github.com/vjfrosty/critique-skill/blob/main/skills/vogon/SKILL.md): the orchestration the skill follows
-- [agents/critic.md](https://github.com/vjfrosty/critique-skill/blob/main/agents/critic.md): the critic's instructions, tools and output format
+- [README](https://github.com/vjfrosty/vogon/blob/main/README.md): install, usage, the ledger, the score, fix mode, the agent, FAQ
+- [skills/vogon/SKILL.md](https://github.com/vjfrosty/vogon/blob/main/skills/vogon/SKILL.md): the orchestration the skill follows
+- [agents/critic.md](https://github.com/vjfrosty/vogon/blob/main/agents/critic.md): the critic's instructions, tools and output format

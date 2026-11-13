@@ -64,7 +64,24 @@ jobs:
               if f"`{alias}`" not in skill:
                   errors.append(f"SKILL.md does not list the alias word '{alias}'")
 
+          fix_loop = pathlib.Path("skills/vogon/references/fix-loop.md")
+          if not fix_loop.is_file() or "references/fix-loop.md" not in skill:
+              errors.append("SKILL.md must point to skills/vogon/references/fix-loop.md, and the file must exist")
+
+          hooks = json.loads(pathlib.Path("hooks/hooks.json").read_text(encoding="utf-8"))
+          for group in hooks.get("hooks", {}).values():
+              for entry in group:
+                  for h in entry.get("hooks", []):
+                      for script in re.findall(r"\$\{CLAUDE_PLUGIN_ROOT\}/([^\"\s]+)", h.get("command", "")):
+                          if not pathlib.Path(script).is_file():
+                              errors.append(f"hooks.json runs {script}, which does not exist")
+
           agent_text, agent = front_matter("agents/critic.md")
+          # The score rule is stated in both files; they must not drift apart.
+          rule_skill = ("**10 − number of `advice`**, floor 5", "**6 − (number of `important` − 1)**, floor 1")
+          rule_agent = ("10 minus the number of advice findings, floor 5", "6 minus (important − 1), floor 1")
+          if not all(r in skill for r in rule_skill) or not all(r in agent_text for r in rule_agent):
+              errors.append("the score rule in SKILL.md and agents/critic.md differs or was reworded; update both and this check")
           if "## Lenses" not in agent_text or "`papertrail`" not in agent_text or "`loopholes`" not in agent_text:
               errors.append("critic.md must define the papertrail and loopholes lenses")
           if agent.get("name") != "critic":

@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: ask-gives-quick-take
+expected_outcome: |
+  A quick take on rate_limiter.py: at most five findings from the critic, passed on as they are,
+  with no score line, no verdict table and no ledger file. The reply ends by pointing to the full
+  review command. Nothing is edited.
+context:
+  scaffold_script: place-files.sh

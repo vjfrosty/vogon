@@ -11,6 +11,9 @@ const other = fs.mkdtempSync(path.join(os.tmpdir(), "vogon-other-"));
 fs.mkdirSync(path.join(proj, ".vogon"));
 fs.writeFileSync(path.join(proj, ".vogon", "2026-01-01-old.md"), "ledger");
 fs.writeFileSync(path.join(proj, ".vogon", ".gitignore"), "*\n");
+fs.mkdirSync(path.join(proj, ".vogon", ".tmp"));
+fs.writeFileSync(path.join(proj, ".vogon", ".tmp", "plan.md"), "copy");
+fs.writeFileSync(path.join(proj, ".vogon", ".tmpx.md"), "ledger");
 
 const decide = (fp, tool = "Write") => {
   const out = execFileSync("node", [hook], {
@@ -28,6 +31,8 @@ const cases = [
   ["Edit existing ledger (append a round)", v("2026-01-01-old.md"), "allow", "Edit"],
   ["Write over existing ledger", v("2026-01-01-old.md"), "deny"],
   ["rewrite existing .gitignore", v(".gitignore"), "allow"],
+  ["rewrite a scratch copy in .tmp", v(".tmp", "plan.md"), "allow"],
+  ["existing ledger named like .tmp", v(".tmpx.md"), "deny"],
   ["outside .vogon", path.join(proj, "src", "a.py"), "none"],
   ["escape with ..", path.join(proj, ".vogon", "..", "src", "a.py"), "none"],
   ["look-alike folder", path.join(proj, ".vogon-evil", "a.md"), "none"],

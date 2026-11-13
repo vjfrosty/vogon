@@ -26,38 +26,39 @@ Read the words from the arguments, or from the user's own sentence when there is
 | lens `papertrail` | `docs`, `comments` | "are the docs still right", "do the comments match the code" | the critic weighs docs vs. code first |
 | lens `loopholes` | `edges`, `errors`, `holes` | "check the error handling", "what edge cases did I miss" | the critic weighs failure paths first |
 
-A lens combines with any mode (`/vogon:vogon fix loopholes src/`); both lenses may be given. Options anywhere: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`, `model: <session | opus | sonnet | haiku | fable>` (default `session`: this conversation's model; "use Opus", "with Sonnet" mean the same).
+A lens combines with any mode (`/vogon:vogon fix loopholes src/`). Options anywhere: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`, `model: <session | opus | sonnet | haiku | fable>` (default `session`: this conversation's model; "use Opus" means the same).
 
 ## 0. Confirm when you started it yourself
 
-Look at the user's latest message. If it starts with `/vogon` or names vogon ("vogon this", "run vogon on X"), the user asked for it: go on to step 1. Otherwise you chose this skill from their words, so resolve the target (step 1) and then ask once with AskUserQuestion before any critic runs: `Run vogon <mode> [lens] on <target>?` with the options **Run it**, **Quick take instead** (`ask` mode, one short critic run), and **No, answer normally**. For `fix` or `fix auto`, say in the question that it can take up to 3 rounds and a critic run each. On **No**, leave the skill and answer the user's request without it. If AskUserQuestion is not available (a headless run), do not start: begin the reply with the line `Run /vogon:vogon <mode> <target> to review this.` and then answer normally.
+If the user's latest message starts with `/vogon` or names vogon, go on. Otherwise you chose this skill from their words: resolve the target (step 1), then ask once with AskUserQuestion before any critic runs — `Run vogon <mode> [lens] on <target>?` — with **Run it**, **Quick take instead** (`ask`) and **No, answer normally**; for `fix`, say it can take up to 3 rounds. On **No**, answer without the skill. Without AskUserQuestion (a headless run), do not start: begin the reply with `Run /vogon:vogon <mode> <target> to review this.` and answer normally.
+
+## Progress and cost
+
+The user sees nothing while a critic works. Print one `vogon:` line before the first critic (`critic on <model>, ETA ~1–2 min (estimate)`) and one after each critic: its time and tokens from the `<usage>` line of the Agent result, the score, and the next step with an ETA marked `(estimate)`. End the reply, and the ledger, with `Total: <n> critic runs, <sum>k critic tokens, <wall time>. Your session's own tokens: /cost` — you cannot see your own tokens, so do not guess them.
+
+Send reads, searches and edits that do not depend on each other together in one message; each separate step costs a full model turn.
 
 ## 1. Resolve the target
 
 | The user says | Target becomes |
 |---|---|
 | a path, directory, or commit range | as given |
-| "my changes", "what I did", "the diff" | `git diff` + `git diff --cached` + untracked files from `git status`; if clean, the branch against its base (`git log main..HEAD`) |
+| "my changes", "what I did", "the diff" | `git diff` + `git diff --cached` + untracked files; if clean, the branch against its base (`git log main..HEAD`) |
 | "the plan", "the design", "the spec" | the plan discussed in this conversation; else the newest of `~/.claude/plans/*.md`, `docs/plans`, `docs/execplans`, `plans/`, `.design/` |
-| a task, ticket or PR id | its description plus the work done for it so far (commits, diff, files it names) |
+| a task, ticket or PR id | its description plus the work done for it so far |
 | a topic ("the retry logic") | the files Grep/Glob find for it |
 
-Half-done work is reviewed as half-done: tell the critic what is finished and what is still planned. Still ambiguous → ask. Never critique a guess.
+Half-done work is reviewed as half-done: tell the critic what is finished and what is still planned. Still ambiguous → ask, because a review of the wrong target wastes a critic run and reads as a verdict on work the user did not mean.
+
+In review, `stamp` and `ask` mode inside a git repository, take `git status --porcelain` with the start-up reads and again before replying; if it changed, say `Files changed during the review (by vogon or anything else): <paths>`.
 
 ## 2. Gather the settled list
 
-Decisions the critic must not re-raise, one bullet each with its source; skip what doesn't exist:
-- the `settled:` argument and anything settled in this conversation;
-- the project's memory index (`MEMORY.md` under `~/.claude/projects/<project>/memory/`): lines saying settled, decided, resolved, closed, don't re-raise;
-- titles in `docs/decisions`, `docs/adr`, `adr/` or `decisions/` that touch the target's area.
+Decisions the critic must not re-raise, one bullet each with its source; skip what doesn't exist: the `settled:` argument and anything settled in this conversation; lines in the project's memory index (`MEMORY.md` under `~/.claude/projects/<project>/memory/`) saying settled, decided, resolved or don't re-raise; titles in `docs/decisions`, `docs/adr`, `adr/` or `decisions/` that touch the target.
 
 ## 3. Spawn the critic
 
-One Agent call with `subagent_type: "vogon:critic"`. Pass `model` only when the user named one; otherwise the agent runs on this conversation's model. Use the same model for every critic in the run.
-
-If that agent is not available (skill installed without the plugin), use `subagent_type: "general-purpose"` with the same `model` rule and put the body of `${CLAUDE_PLUGIN_ROOT}/agents/critic.md` (below its front matter) at the top of the prompt; in a manual install that file is `../../agents/critic.md` from this skill's folder.
-
-The prompt:
+One Agent call with `subagent_type: "vogon:critic"`. Pass `model` only when the user named one, and use the same model for every critic in the run. If that agent is missing (skill installed without the plugin), use `general-purpose` and put the body of `${CLAUDE_PLUGIN_ROOT}/agents/critic.md` (in a manual install, `../../agents/critic.md` from this skill's folder) at the top of the prompt.
 
 ```
 Review target: <target>
@@ -70,7 +71,7 @@ Settled — do not raise these, they are decided:
 
 ### Focused re-review (fix rounds and `recheck`)
 
-A re-review does not read the whole target again: a fresh critic reading everything finds new faults in text the fixes wrote, and each round costs as much as the first. Append:
+A fresh critic that reads everything again finds new faults in text the fixes wrote, and each round costs as much as the first. So append:
 
 ```
 Focused re-review. Do not review the whole target again.
@@ -80,11 +81,11 @@ Focused re-review. Do not review the whole target again.
 <unified diff of the target since the previous review>
 ```
 
-For the diff, copy the target before applying fixes (`cp <target> <scratch>/before`) and use `diff -u` (for code under git, `git diff` since the recorded commit).
+For the diff, copy each target file into `.vogon/.tmp/` before fixing (with Write or the shell's own copy; the shell may be bash or PowerShell) and run `git diff --no-index .vogon/.tmp/<file> <file>`, which works anywhere git is installed. For code under git, `git diff` since the recorded commit is enough. Delete `.vogon/.tmp/` when the run ends.
 
 ## 4. Validate, triage, score
 
-Drop a finding that lacks an id, a severity, evidence or a mechanism, and count the dropped. Verify every claim that names a file, line or behaviour yourself (Read / Grep / git). Give each finding one verdict:
+Drop a finding that lacks an id, a severity, evidence or a mechanism, and count the dropped. Verify every claim yourself and note how in a `checked` column: when the finding has a `Quote:` line, Grep for it in the cited file (`checked: quote matches store.py:34`), otherwise Read / Grep / git (`checked: Read client.py:15-26`). A quote that does not match only means checking the usual way; it is never a reason to drop a finding.
 
 | Verdict | Meaning |
 |---|---|
@@ -94,7 +95,7 @@ Drop a finding that lacks an id, a severity, evidence or a mechanism, and count 
 | `wrong` | The critic is mistaken: what is true and how you checked. Unchecked disagreement is `wrong (unverified)`. |
 | `settled` | Re-opens an item on the settled list. Name the source. |
 
-Every `important` finding ends as `fix`, `needs-you`, `wrong` or `settled` — never `taste`, never open. `info` gets no verdict (`—`).
+Every `important` finding ends as `fix`, `needs-you`, `wrong` or `settled`. `info` gets no verdict (`—`). In fix rounds you are judging critiques of text you wrote, where a model most wants to defend its own work: a finding about lines you changed is `wrong` only with a quote that shows it is false.
 
 **Score (1–10)** from the verified findings still open (`wrong`, `settled`, `info` and findings answered by a marked proposal do not count):
 - no `important` open: **10 − number of `advice`**, floor 5;
@@ -104,7 +105,7 @@ So 8 means: nothing important, at most two advice. Show the critic's own score b
 
 ## 5. Archive and reply
 
-Write the ledger to `.vogon/<YYYY-MM-DD>-<slug>.md` in the project root; the first time, also write `.vogon/.gitignore` containing `*` so git ignores the folder. Never edit the user's `.gitignore` or `.git/`. The slug is the target's file name or a few words for it. If the file exists, use `-2`, `-3`, … (the plugin's hook refuses to overwrite a ledger; add later rounds with Edit). Contents: target, lens, focus, settled list, the critic's answer verbatim, the ledger table, the score, and last:
+Write the ledger to `.vogon/<YYYY-MM-DD>-<slug>.md` in the project root (slug: the target's file name or a few words; if taken, `-2`, `-3`; the plugin's hook refuses to overwrite a ledger, so later rounds are appended with Edit). The first time, also write `.vogon/.gitignore` containing `*`; leave the user's own `.gitignore` and `.git/` alone. Contents: target, lens, focus, settled list, the critic's model, time, tokens and `agentId` (its full answer stays in the session's `subagents/agent-<agentId>.jsonl` under `~/.claude/projects/` until Claude Code cleans it up), the critic's `What looks good` bullets, the table `id | severity | verdict | finding | evidence | checked`, the score, the totals line, and last:
 
 ```
 ## To do
@@ -112,45 +113,20 @@ Write the ledger to `.vogon/<YYYY-MM-DD>-<slug>.md` in the project root; the fir
 - [ ] proposal — <value written as "(proposed — confirm)", where>
 ```
 
-(none open → `## To do` with `- nothing`). Reply with:
-
-1. `Ledger: <path>`
-2. `Score N/10 (critic said M/10) — X fix, Y needs-you, Z taste, W wrong, V settled; D dropped (no evidence)`
-3. The table: `id | severity | verdict | finding (one line) | evidence`
-4. The `needs-you` questions, numbered, and any proposals to confirm; say they can be answered by ticking the To do list and running `recheck`.
-
-In review mode: no edits, no fix proposals beyond the one-line notes.
+Reply with: `Ledger: <path>`; `Score N/10 (critic said M/10) — X fix, Y needs-you, Z taste, W wrong, V settled; D dropped (no evidence)`; the table without the `checked` column; the `needs-you` questions and proposals, noting they can be answered by ticking the To do list and running `recheck`. In review mode: no edits.
 
 ## 6. Stamp
 
-Steps 1–5, then put one line first in the reply and at the top of the ledger:
-- `APPROVED — N/10` when the score is ≥ 8 and no `important` finding is open;
-- otherwise `DEMOLISHED — N/10, blocked by c1, c4` naming the open `important` findings (or the advice count when it is the score that falls short).
+Steps 1–5, then one line first in the reply and the ledger: `APPROVED — N/10` when the score is ≥ 8 and no `important` is open, else `DEMOLISHED — N/10, blocked by c1, c4` (or the advice count when only the score falls short). Do not fix anything: the verdict must judge what the user is about to merge. A DEMOLISHED reply ends with `To fix: /vogon:vogon fix <target>`.
 
-Never fix in stamp mode. A DEMOLISHED reply ends with `To fix: /vogon:vogon fix <target>`.
+## 7. Fix mode
 
-## 7. Fix mode — loop to 8
-
-After step 5, repeat up to **3 rounds**:
-
-1. **Plan the round:** one line per `fix` finding (`id — what will change, where`), plus every `needs-you` finding.
-2. **Approve.** `fix`: one AskUserQuestion per round showing the plan; the user applies all, picks ids, or stops, and answers any important `needs-you` there. An unapproved `fix` becomes `declined` and leaves the score. `fix auto`: no question; print the plan as the round's log, and for each `needs-you` take the smaller, reversible option as a marked proposal.
-3. **Apply** each approved fix as the smallest edit that makes its finding false: change only the sentence, step or lines it names. No new sections, no restructuring, no improvements no finding asked for — every added line is new surface for the next critic. A value only the user can set (a retention period, a deadline, a budget, who is on call) is never written as fact: write `14 days (proposed — confirm)` and add it to the To do list; that finding leaves the score, and the reply says the score assumes the proposals are accepted. For code, run the project's tests after the edits. Leave `taste` alone. Never commit.
-4. **Re-review:** step 3 as a focused re-review, then step 4. Append `## Round <n>` to the ledger with Edit: what was applied, declined or proposed, the new score, the table, and the updated To do list.
-5. **Stop** when the score is ≥ 8, when nothing left is yours to fix (only `needs-you`, `taste`, `declined`), or after round 3. Never run a fourth round.
-
-Final reply: the score per round (`3 → 6 → 8`), what was fixed, the proposals to confirm, and what is left. When it did not reach 8, say so and list what still stands.
+After step 5, read `${CLAUDE_SKILL_DIR}/references/fix-loop.md` (the `references/fix-loop.md` file next to this one) and follow it. Reviews that never fix do not load it.
 
 ## 8. Recheck
 
-After the user has acted on a ledger: load it (the newest in `.vogon/`, or the path given). Ticked To do items (`- [x] c3 — … answer`) are the user's answers: treat each as settled for this run. Run one focused re-review against the diff since the ledger's date or commit, verify, score, and append `## Recheck` (with the updated To do list) to the same ledger. Reply with the score and the ids still open. No fixes.
+Load the ledger (the newest in `.vogon/`, or the path given). Ticked To do items (`- [x] c3 — … answer`) are the user's answers: treat each as settled for this run. Run one focused re-review against the diff since the ledger's commit or date, verify, score, and append `## Recheck` with the updated To do list to the same ledger. Reply with the score and the ids still open. No fixes.
 
 ## 9. Ask
 
-A quick opinion while working. Resolve the target (step 1), skip the settled list unless the user gave one, and spawn the critic (step 3) with this line after the prompt block:
-
-```
-Quick opinion: give at most 5 findings, most severe first, in the usual format, and skip the score line.
-```
-
-Pass on the critic's answer as it is, under one line naming the critic's model. Do not verify, score, archive or fix. End with: `For a verified, scored ledger: /vogon:vogon <target>`.
+Resolve the target, skip the settled list unless given, and spawn the critic with this line after the prompt block: `Quick opinion: give at most 5 findings, most severe first, in the usual format, and skip the score line.` Pass on its answer as it is, under one line naming the critic's model. No verification, score, ledger or fixes. End with `For a verified, scored ledger: /vogon:vogon <target>`.

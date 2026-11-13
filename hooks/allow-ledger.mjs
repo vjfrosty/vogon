@@ -3,7 +3,7 @@
 //
 // Inside <project>/.vogon/:
 //   - Write to a new file, or Edit of any file -> allow (no prompt);
-//   - Write to a file that already exists      -> deny (ledgers are append-only;
+//   - Write over an existing ledger            -> deny (ledgers are append-only;
 //     the skill saves a new one as -2, -3 or appends a round with Edit).
 // Anything else gets no answer from this hook, so Claude Code's normal permission
 // rules apply unchanged. If Node is missing or anything fails, the hook stays silent
@@ -39,7 +39,9 @@ process.stdin.on("end", () => {
     const norm = (p) => (sameCase ? p.toLowerCase() : p);
     if (!norm(target).startsWith(norm(ledgers))) return;
 
-    const isLedger = path.basename(target) !== ".gitignore";
+    // .vogon/.gitignore and the fix loop's scratch copies in .vogon/.tmp/ may be rewritten.
+    const scratch = path.join(ledgers, ".tmp") + path.sep;
+    const isLedger = path.basename(target) !== ".gitignore" && !norm(target).startsWith(norm(scratch));
     if (event.tool_name === "Write" && isLedger && fs.existsSync(target)) {
       answer(
         "deny",

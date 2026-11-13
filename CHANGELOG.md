@@ -50,10 +50,18 @@ First release, as a Claude Code plugin with one skill and one agent.
 - When Claude starts the skill from the user's own words (no `/vogon` and no mention of vogon),
   it asks once before any critic runs: run it, a quick take instead, or answer normally. The
   `critic` agent starts only when the user names it or another skill calls it.
+- Guardrails: the critic quotes the line each finding points at, and the skill checks the quote and
+  records how every finding was checked; a critique of vogon's own edit is rejected only with a
+  disproving quote; files changed during a review are reported.
+- Progress lines with each critic's measured time and tokens, ETAs marked as estimates, and a
+  totals line.
+- No over-extension: the fix loop prefers rewording or removing, logs lines added and removed per
+  round, and stops if a round grows the target by more than about a fifth; the critic reports
+  bloat as `simplify`. The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
 - A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,
-  `stamp-blocks-bad-change`, `papertrail-finds-stale-docs` and `loopholes-finds-swallowed-error`.
+  `stamp-blocks-bad-change`, `papertrail-finds-stale-docs`, `loopholes-finds-swallowed-error`, `ask-gives-quick-take` and `recheck-reads-ticked-answers`.
 
-[Unreleased]: https://github.com/vjfrosty/critique-skill/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/vjfrosty/critique-skill/releases/tag/v0.0.1
+[Unreleased]: https://github.com/vjfrosty/vogon/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/vjfrosty/vogon/releases/tag/v0.0.1

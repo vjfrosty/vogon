@@ -1,9 +1,11 @@
 <p align="center">
-  <img src="assets/logo.svg" width="180" alt="vogon logo: a grumpy green alien in a suit inside a V">
+  <img src="assets/logo.svg" width="200" alt="vogon logo: a grumpy green alien in a suit inside a V">
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/mascot.png" width="200" alt="The vogon mascot: the same alien holding a clipboard and a rubber stamp">
 </p>
 
 <p align="center">
-  <a href="https://github.com/vjfrosty/critique-skill/actions/workflows/ci.yml"><img src="https://github.com/vjfrosty/critique-skill/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="https://github.com/vjfrosty/vogon/actions/workflows/ci.yml"><img src="https://github.com/vjfrosty/vogon/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <img src="https://img.shields.io/badge/Claude%20Code-plugin-D97757" alt="A Claude Code plugin">
   <img src="https://img.shields.io/badge/skill%20%2B%20agent-vogon%20%C2%B7%20critic-6B4FBB" alt="One skill and one agent">
   <img src="https://img.shields.io/badge/works%20on-any%20project-2EA043" alt="Works on any project">
@@ -30,8 +32,22 @@ It ships two parts:
 | **Never** | edits in review mode, commits, invents a business fact, or raises a decision you already made. The critic agent cannot edit at all |
 | **Licence** | MIT |
 
+## Status
+
+**Version 0.0.1, first public release, still being tuned.** What is tested, as of 2026-11-13:
+
+| Area | Result |
+|---|---|
+| Review, stamp and lenses | 4 test cases (planted bugs, a data-loss bug under `stamp`, stale docs, swallowed errors): all 17 checks passed, 2½–3½ minutes each |
+| Starting from plain words | 22 requests run at least twice: never started on the 11 that were not review requests; "what edge cases did I miss" is the weakest trigger |
+| Asking before it starts | Started from your own words, it asks once before any critic runs; naming vogon or typing the command skips the question |
+| Fix loop | Being tuned. The previous version stalled at 6/10 on the deploy-plan test (1 → 5 → 6 → 6) in 16 minutes; this version lets a fix add the one step a missing-step finding needs, refuses to bloat the target, and logs lines added per round |
+| Ledger hook | 13 tests pass on Linux, Windows and macOS in CI |
+| Cost | About 350 tokens always loaded; about 3.7k for the skill and 2.6k for each critic when it runs (`claude plugin details vogon@vogon`) |
+
 ## Contents
 
+- [Status](#status)
 - [Install](#install)
 - [Use it](#use-it)
 - [How it works](#how-it-works)
@@ -52,7 +68,7 @@ It ships two parts:
 In Claude Code:
 
 ```
-/plugin marketplace add vjfrosty/critique-skill
+/plugin marketplace add vjfrosty/vogon
 /plugin install vogon@vogon
 ```
 
@@ -64,7 +80,7 @@ Start a new session afterwards. To update later: `/plugin marketplace update vog
 Copy the two parts into your personal Claude folders. On macOS and Linux:
 
 ```bash
-git clone https://github.com/vjfrosty/critique-skill /tmp/vogon
+git clone https://github.com/vjfrosty/vogon /tmp/vogon
 cp -r /tmp/vogon/skills/vogon "$HOME/.claude/skills/vogon"
 cp /tmp/vogon/agents/critic.md "$HOME/.claude/agents/critic.md"
 ```
@@ -213,7 +229,7 @@ The score comes from the verified findings, by a fixed rule, so two runs on the 
 
 1. It plans the round: one line per fix, plus every question only you can answer.
 2. `fix` asks you once: apply all, pick some, or stop, and answer the questions there. `fix auto` never asks: it logs the plan and turns each question into a marked proposal, taking the smaller, reversible option (`14 days (proposed — confirm)`).
-3. It applies each fix as the smallest edit that makes the finding false, and runs your tests for code.
+3. It applies each fix as the smallest edit that makes the finding false, and runs your tests for code. It prefers rewording or removing to adding, logs how many lines each round added and removed, and stops if a round would grow the target by more than about a fifth.
 4. A fresh critic does a **focused re-review**: it checks each previous finding and looks for new problems only in the lines that changed.
 
 It stops at a score of 8 or more, when nothing left is its to fix, or after the third round. A finding answered by a proposal leaves the score, and the reply lists the proposals so you can confirm or change them. It never commits; you do.
@@ -298,7 +314,9 @@ A review takes a few minutes. Each fix round adds a focused re-review, which is 
 .claude-plugin/plugin.json       the plugin: name, version, description
 .claude-plugin/marketplace.json  lets the repo be added with /plugin marketplace add
 skills/vogon/SKILL.md            the skill: modes and words, resolve the target, gather settled decisions,
-                                 call the critic, verify, score, archive, stamp, fix loop
+                                 call the critic, verify, score, archive, stamp
+skills/vogon/references/fix-loop.md  the fix loop, read only in fix mode: minimal fixes, no
+                                 over-extension, at most three rounds
 agents/critic.md                 the critic agent: read-only tools, your model, the lenses, and the
                                  reviewer's instructions and output format (edit this to change what
                                  counts as important or which kinds of finding exist)
@@ -309,7 +327,7 @@ tests/allow-ledger.test.cjs      tests for the hook
 assets/                          the logo (logo.svg), the plugin icon (icon.png) and the mascot
 evals/                           test cases in the claude plugin eval layout: a fix loop on a flawed
                                  deploy plan, planted bugs, a stamp on a data-loss bug, stale docs,
-                                 and swallowed errors
+                                 swallowed errors, a quick take, and a recheck with ticked answers
 llms.txt                         a short description for language models
 CHANGELOG.md                     what changed, by version
 ```
@@ -317,7 +335,7 @@ CHANGELOG.md                     what changed, by version
 ## Test it
 
 ```bash
-git clone https://github.com/vjfrosty/critique-skill vogon && cd vogon
+git clone https://github.com/vjfrosty/vogon vogon && cd vogon
 claude plugin validate .
 claude plugin eval . --allow-tools Write,Edit,Bash --scaffold
 ```

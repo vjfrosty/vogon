@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: recheck-reads-ticked-answers
+expected_outcome: |
+  A recheck of the existing ledger .vogon/2026-11-01-store-py.md. c1 is reported resolved (prune now
+  keeps records newer than the cutoff), c2 is closed by the ticked To do answer (single writer only),
+  and the score rises. A '## Recheck' section is appended to the same ledger; no new ledger file is
+  created and store.py is not edited.
+context:
+  scaffold_script: place-files.sh
