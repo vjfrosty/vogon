@@ -50,6 +50,8 @@ First release, as a Claude Code plugin with one skill and one agent.
 - When Claude starts the skill from the user's own words (no `/vogon` and no mention of vogon),
   it asks once before any critic runs: run it, a quick take instead, or answer normally. The
   `critic` agent starts only when the user names it or another skill calls it.
+- A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
+  in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,
   `stamp-blocks-bad-change`, `papertrail-finds-stale-docs` and `loopholes-finds-swallowed-error`.
 

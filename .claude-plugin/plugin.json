@@ -9,6 +9,7 @@
   "homepage": "https://github.com/vjfrosty/critique-skill",
   "repository": "https://github.com/vjfrosty/critique-skill",
   "license": "MIT",
+  "icon": "./assets/icon.png",
   "keywords": [
     "code-review",
     "plan-review",

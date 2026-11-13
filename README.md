@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="assets/logo.svg" width="180" alt="vogon logo: a grumpy green alien in a suit inside a V">
+</p>
+
+<p align="center">
   <a href="https://github.com/vjfrosty/critique-skill/actions/workflows/ci.yml"><img src="https://github.com/vjfrosty/critique-skill/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <img src="https://img.shields.io/badge/Claude%20Code-plugin-D97757" alt="A Claude Code plugin">
   <img src="https://img.shields.io/badge/skill%20%2B%20agent-vogon%20%C2%B7%20critic-6B4FBB" alt="One skill and one agent">
@@ -220,6 +224,8 @@ It stops at a score of 8 or more, when nothing left is its to fix, or after the 
 
 ## Stamp and lenses
 
+<img src="assets/mascot.png" width="160" align="right" alt="The vogon mascot holding a clipboard and a rubber stamp">
+
 **`stamp`** is a full review with one more line first: `APPROVED — 9/10` when the score is 8 or more and nothing important is open, otherwise `DEMOLISHED — 4/10, blocked by c1, c4`. It never fixes; a DEMOLISHED reply points to `fix`.
 
 A **lens** tells the critic where to look first and deepest. It still reports anything important it finds elsewhere.
@@ -300,6 +306,7 @@ hooks/hooks.json                 a PreToolUse hook for Write and Edit
 hooks/allow-ledger.mjs           allows writes inside <project>/.vogon/ only, without a prompt, and
                                  refuses to overwrite an existing ledger
 tests/allow-ledger.test.cjs      tests for the hook
+assets/                          the logo (logo.svg), the plugin icon (icon.png) and the mascot
 evals/                           test cases in the claude plugin eval layout: a fix loop on a flawed
                                  deploy plan, planted bugs, a stamp on a data-loss bug, stale docs,
                                  and swallowed errors
