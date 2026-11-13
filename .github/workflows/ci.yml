@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # The skill is prose; CI checks that Claude Code can load it and that its parts fit together.
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Front matter, references and test cases
+        shell: python
+        run: |
+          import pathlib, re, sys, yaml
+
+          errors = []
+          skill = pathlib.Path("SKILL.md").read_text(encoding="utf-8")
+          match = re.match(r"^---\n(.*?)\n---\n", skill, re.S)
+          if not match:
+              sys.exit("SKILL.md has no front matter")
+          meta = yaml.safe_load(match.group(1))
+          if meta.get("name") != "critique":
+              errors.append("front matter name is not 'critique'")
+          description = meta.get("description") or ""
+          if not description or len(description) > 1024:
+              errors.append(f"description is empty or longer than 1024 characters ({len(description)})")
+          if len(skill.splitlines()) > 500:
+              errors.append("SKILL.md is longer than 500 lines")
+
+          for name in ("critic_prompt.md", "README.md", "LICENSE", "CHANGELOG.md"):
+              if not pathlib.Path(name).is_file():
+                  errors.append(f"{name} is missing")
+          if "critic_prompt.md" not in skill:
+              errors.append("SKILL.md does not reference critic_prompt.md")
+
+          for case in sorted(pathlib.Path("evals").iterdir()):
+              if not case.is_dir():
+                  continue
+              data = yaml.safe_load((case / "case.yaml").read_text(encoding="utf-8"))
+              if data.get("name") != case.name:
+                  errors.append(f"{case}: case.yaml name differs from the folder name")
+              if not isinstance(data.get("schema_version"), str):
+                  errors.append(f"{case}: schema_version must be a quoted string")
+              if not (case / "prompt.md").is_file():
+                  errors.append(f"{case}: prompt.md is missing")
+              graders = sorted((case / "graders").glob("*.md"))
+              if not graders:
+                  errors.append(f"{case}: no graders")
+              for grader in graders:
+                  if not grader.read_text(encoding="utf-8").startswith("---\ntype:"):
+                      errors.append(f"{grader}: no grader header")
+
+          for error in errors:
+              print(f"::error::{error}")
+          sys.exit(1 if errors else 0)

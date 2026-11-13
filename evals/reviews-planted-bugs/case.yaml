@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: reviews-planted-bugs
+expected_outcome: |
+  A ledger about rate_limiter.py and README.md with ids, severities, file:line evidence and verdicts.
+  It finds the planted bugs: the off-by-one that lets limit+1 requests through (len(calls) > limit),
+  the mutable default argument that makes every RateLimiter share one history (contradicting the
+  README), reset() raising KeyError for an unknown client (contradicting the README), and idle clients
+  never being removed (contradicting the README's flat-memory claim). A score from the rubric.
+  Nothing is edited.
+context:
+  scaffold_script: place-files.sh
