@@ -41,7 +41,7 @@ It ships two parts:
 | Review, stamp and lenses | 4 test cases (planted bugs, a data-loss bug under `stamp`, stale docs, swallowed errors): all 17 checks passed, 2½–3½ minutes each |
 | Starting from plain words | 22 requests run at least twice: never started on the 11 that were not review requests; "what edge cases did I miss" is the weakest trigger |
 | Asking before it starts | Started from your own words, it asks once before any critic runs; naming vogon or typing the command skips the question |
-| Fix loop | Being tuned. The previous version stalled at 6/10 on the deploy-plan test (1 → 5 → 6 → 6) in 16 minutes; this version lets a fix add the one step a missing-step finding needs, refuses to bloat the target, and logs lines added per round |
+| Fix loop | On the deploy-plan test: 1 → 6 → 6 → 6 in three rounds, critic time about 6½ min, the plan grew 31 → 39 lines. Every round fixed nearly all it targeted; it stopped below 8 because the plan's rollback method cannot work as designed, and it named that as a decision for the owner instead of inventing one. An earlier version reached 8 on the same plan in two rounds |
 | Ledger hook | 13 tests pass on Linux, Windows and macOS in CI |
 | Cost | About 350 tokens always loaded; about 3.7k for the skill and 2.6k for each critic when it runs (`claude plugin details vogon@vogon`) |
 
@@ -229,7 +229,7 @@ The score comes from the verified findings, by a fixed rule, so two runs on the 
 
 1. It plans the round: one line per fix, plus every question only you can answer.
 2. `fix` asks you once: apply all, pick some, or stop, and answer the questions there. `fix auto` never asks: it logs the plan and turns each question into a marked proposal, taking the smaller, reversible option (`14 days (proposed — confirm)`).
-3. It applies each fix as the smallest edit that makes the finding false, and runs your tests for code. It prefers rewording or removing to adding, logs how many lines each round added and removed, and stops if a round would grow the target by more than about a fifth.
+3. It applies each fix as the smallest edit that makes the finding false, and runs your tests for code. It prefers rewording or removing to adding, logs net lines added per round, and stops once the target has grown by more than about a fifth.
 4. A fresh critic does a **focused re-review**: it checks each previous finding and looks for new problems only in the lines that changed.
 
 It stops at a score of 8 or more, when nothing left is its to fix, or after the third round. A finding answered by a proposal leaves the score, and the reply lists the proposals so you can confirm or change them. It never commits; you do.

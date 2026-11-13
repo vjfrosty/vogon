@@ -4,7 +4,9 @@
 // Inside <project>/.vogon/:
 //   - Write to a new file, or Edit of any file -> allow (no prompt);
 //   - Write over an existing ledger            -> deny (ledgers are append-only;
-//     the skill saves a new one as -2, -3 or appends a round with Edit).
+//     the skill saves a new one as -2, -3 or appends a round with Edit);
+//   - except .vogon/.gitignore and the fix loop's scratch copies in .vogon/.tmp/,
+//     which may be rewritten.
 // Anything else gets no answer from this hook, so Claude Code's normal permission
 // rules apply unchanged. If Node is missing or anything fails, the hook stays silent
 // and the user simply sees the usual prompt.

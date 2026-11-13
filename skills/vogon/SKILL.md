@@ -7,26 +7,26 @@ allowed-tools: Agent, Read, Grep, Glob, Bash, Edit, Write
 
 # Vogon
 
-A fresh critic, on the user's own model unless they name another, reviews the target without this conversation's reasoning. You verify what it says, score the target 1–10 from the verified findings, and hand the user a ledger. `fix` also fixes what is yours to fix and loops until the score reaches 8; `stamp` ends in APPROVED or DEMOLISHED; `ask` only passes on the critic's answer.
+A fresh critic reviews the target without this conversation's reasoning; you verify its findings, score the target 1–10 and save a ledger.
 
 **Arguments:** `$ARGUMENTS`
 
 ## Modes, lenses and words
 
-Read the words from the arguments, or from the user's own sentence when there is no slash. One mode, any lenses, then the target. Nothing matches → review.
+Take the words from the arguments, or from the user's sentence. One mode, any lenses, then the target; nothing matches → review.
 
-| Word | Also accept | Plain phrases | What happens |
+| Word | Also | Plain phrases | What happens |
 |---|---|---|---|
-| *(none)* | `review`, `critique` | "critique", "second opinion", "score / rate / grade it", "is this ready" | review: steps 1–5 |
-| `stamp` | `gate`, `verdict`, `inspect`, `audit` | "can I merge / ship this", "approve or block", "is this good to go" | review + APPROVED / DEMOLISHED (step 6) |
-| `ask` | `quick` | "quick take", "what would a critic say", "poke holes in", "devil's advocate" | the critic's answer only (step 9) |
-| `fix` | | "fix it until it passes / scores 8", "critique and fix" | review, then the fix loop (step 7) |
-| `fix auto` | `fix --auto` | the same plus "automatically", "without asking" | the loop without asking |
-| `recheck` | `again` | "check again", "did I fix it" after a ledger | one focused re-review (step 8) |
-| lens `papertrail` | `docs`, `comments` | "are the docs still right", "do the comments match the code" | the critic weighs docs vs. code first |
-| lens `loopholes` | `edges`, `errors`, `holes` | "check the error handling", "what edge cases did I miss" | the critic weighs failure paths first |
+| *(none)* | `review` | "second opinion", "rate it", "is this ready" | steps 1–5 |
+| `stamp` | `gate`, `verdict`, `inspect`, `audit` | "can I merge this" | + APPROVED / DEMOLISHED (step 6) |
+| `ask` | `quick` | "quick take", "poke holes in" | critic's answer only (step 9) |
+| `fix` | | "fix it until it passes" | + fix loop (step 7) |
+| `fix auto` | | + "without asking" | loop without asking |
+| `recheck` | `again` | "did I fix it" | focused re-review (step 8) |
+| lens `papertrail` | `docs`, `comments` | "are the docs still right" | critic checks docs vs. code first |
+| lens `loopholes` | `edges`, `errors`, `holes` | "what edge cases did I miss" | critic checks failure paths first |
 
-A lens combines with any mode (`/vogon:vogon fix loopholes src/`). Options anywhere: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`, `model: <session | opus | sonnet | haiku | fable>` (default `session`: this conversation's model; "use Opus" means the same).
+A lens combines with any mode. Options: `focus:`, `settled:` (decisions not to raise), `model: session | opus | sonnet | haiku | fable` (default: this conversation's model).
 
 ## 0. Confirm when you started it yourself
 
@@ -34,9 +34,9 @@ If the user's latest message starts with `/vogon` or names vogon, go on. Otherwi
 
 ## Progress and cost
 
-The user sees nothing while a critic works. Print one `vogon:` line before the first critic (`critic on <model>, ETA ~1–2 min (estimate)`) and one after each critic: its time and tokens from the `<usage>` line of the Agent result, the score, and the next step with an ETA marked `(estimate)`. End the reply, and the ledger, with `Total: <n> critic runs, <sum>k critic tokens, <wall time>. Your session's own tokens: /cost` — you cannot see your own tokens, so do not guess them.
+Print a `vogon:` line before the first critic (`critic on <model>, ETA ~1–2 min (estimate)`) and after each one: its time and tokens from the Agent result's `<usage>` line, the score, and the next step's ETA `(estimate)`. End the reply and the ledger with `Total: <n> critic runs, <sum>k critic tokens, <wall time>. Your own tokens: /cost` (you cannot see them, so do not guess).
 
-Send reads, searches and edits that do not depend on each other together in one message; each separate step costs a full model turn.
+Send independent reads, searches and edits together in one message; each separate step costs a model turn.
 
 ## 1. Resolve the target
 
@@ -48,17 +48,17 @@ Send reads, searches and edits that do not depend on each other together in one 
 | a task, ticket or PR id | its description plus the work done for it so far |
 | a topic ("the retry logic") | the files Grep/Glob find for it |
 
-Half-done work is reviewed as half-done: tell the critic what is finished and what is still planned. Still ambiguous → ask, because a review of the wrong target wastes a critic run and reads as a verdict on work the user did not mean.
+For half-done work, tell the critic what is finished and what is still planned. Still ambiguous → ask: reviewing the wrong target wastes a critic run.
 
-In review, `stamp` and `ask` mode inside a git repository, take `git status --porcelain` with the start-up reads and again before replying; if it changed, say `Files changed during the review (by vogon or anything else): <paths>`.
+Outside fix mode, in a git repository, take `git status --porcelain` and `git diff HEAD | git hash-object --stdin` at the start and before replying; if either changed, say `Files changed during the review (by vogon or anything else): <paths>`.
 
 ## 2. Gather the settled list
 
-Decisions the critic must not re-raise, one bullet each with its source; skip what doesn't exist: the `settled:` argument and anything settled in this conversation; lines in the project's memory index (`MEMORY.md` under `~/.claude/projects/<project>/memory/`) saying settled, decided, resolved or don't re-raise; titles in `docs/decisions`, `docs/adr`, `adr/` or `decisions/` that touch the target.
+Decisions not to re-raise, each with its source: the `settled:` argument and this conversation; settled or decided lines in the project's `MEMORY.md` (under `~/.claude/projects/<project>/memory/`); titles in `docs/decisions`, `docs/adr`, `adr/` or `decisions/` that touch the target.
 
 ## 3. Spawn the critic
 
-One Agent call with `subagent_type: "vogon:critic"`. Pass `model` only when the user named one, and use the same model for every critic in the run. If that agent is missing (skill installed without the plugin), use `general-purpose` and put the body of `${CLAUDE_PLUGIN_ROOT}/agents/critic.md` (in a manual install, `../../agents/critic.md` from this skill's folder) at the top of the prompt.
+One Agent call with `subagent_type: "vogon:critic"`; pass `model` only when the user named one, the same for every critic in the run. Without the plugin's agent, use `general-purpose` with the body of `agents/critic.md` (`${CLAUDE_PLUGIN_ROOT}/agents/critic.md`, or `../../agents/critic.md` from this folder) atop the prompt.
 
 ```
 Review target: <target>
@@ -71,7 +71,7 @@ Settled — do not raise these, they are decided:
 
 ### Focused re-review (fix rounds and `recheck`)
 
-A fresh critic that reads everything again finds new faults in text the fixes wrote, and each round costs as much as the first. So append:
+A critic that re-reads everything finds new faults in the fixes' text and costs a full review, so append:
 
 ```
 Focused re-review. Do not review the whole target again.
@@ -81,11 +81,11 @@ Focused re-review. Do not review the whole target again.
 <unified diff of the target since the previous review>
 ```
 
-For the diff, copy each target file into `.vogon/.tmp/` before fixing (with Write or the shell's own copy; the shell may be bash or PowerShell) and run `git diff --no-index .vogon/.tmp/<file> <file>`, which works anywhere git is installed. For code under git, `git diff` since the recorded commit is enough. Delete `.vogon/.tmp/` when the run ends.
+For the diff, copy each target file, keeping its path from the project root: to `.vogon/.tmp/start/<path>` once before the first fix, and to `.vogon/.tmp/prev/<path>` before each round (replacing the last). Copy with Write or the shell's copy command (bash or PowerShell); diff with `git diff --no-index .vogon/.tmp/prev/<path> <path>`, which works anywhere git is installed. Delete `.vogon/.tmp/` when the run ends.
 
 ## 4. Validate, triage, score
 
-Drop a finding that lacks an id, a severity, evidence or a mechanism, and count the dropped. Verify every claim yourself and note how in a `checked` column: when the finding has a `Quote:` line, Grep for it in the cited file (`checked: quote matches store.py:34`), otherwise Read / Grep / git (`checked: Read client.py:15-26`). A quote that does not match only means checking the usual way; it is never a reason to drop a finding.
+Drop findings without an id, severity, evidence or mechanism, and count them. Verify every claim and note how in a `checked` column: Grep a finding's `Quote:` in the cited file (`quote matches store.py:34`), else Read / Grep / git (`Read client.py:15-26`). A quote that does not match just means checking the usual way, never dropping the finding.
 
 | Verdict | Meaning |
 |---|---|
@@ -95,7 +95,7 @@ Drop a finding that lacks an id, a severity, evidence or a mechanism, and count 
 | `wrong` | The critic is mistaken: what is true and how you checked. Unchecked disagreement is `wrong (unverified)`. |
 | `settled` | Re-opens an item on the settled list. Name the source. |
 
-Every `important` finding ends as `fix`, `needs-you`, `wrong` or `settled`. `info` gets no verdict (`—`). In fix rounds you are judging critiques of text you wrote, where a model most wants to defend its own work: a finding about lines you changed is `wrong` only with a quote that shows it is false.
+Every `important` finding ends as `fix`, `needs-you`, `wrong` or `settled`. `info` gets no verdict (`—`). A finding about lines you changed in a fix round is `wrong` only with a quote that disproves it: models tend to defend their own text.
 
 **Score (1–10)** from the verified findings still open (`wrong`, `settled`, `info` and findings answered by a marked proposal do not count):
 - no `important` open: **10 − number of `advice`**, floor 5;
@@ -105,7 +105,7 @@ So 8 means: nothing important, at most two advice. Show the critic's own score b
 
 ## 5. Archive and reply
 
-Write the ledger to `.vogon/<YYYY-MM-DD>-<slug>.md` in the project root (slug: the target's file name or a few words; if taken, `-2`, `-3`; the plugin's hook refuses to overwrite a ledger, so later rounds are appended with Edit). The first time, also write `.vogon/.gitignore` containing `*`; leave the user's own `.gitignore` and `.git/` alone. Contents: target, lens, focus, settled list, the critic's model, time, tokens and `agentId` (its full answer stays in the session's `subagents/agent-<agentId>.jsonl` under `~/.claude/projects/` until Claude Code cleans it up), the critic's `What looks good` bullets, the table `id | severity | verdict | finding | evidence | checked`, the score, the totals line, and last:
+Write the ledger to `.vogon/<YYYY-MM-DD>-<slug>.md` in the project root (if taken, `-2`, `-3`; the hook refuses overwrites, so later rounds are appended with Edit). The first time, also write `.vogon/.gitignore` containing `*`; leave the user's `.gitignore` and `.git/` alone. Contents: target, reviewed commit (`git rev-parse HEAD`, or "not under git"), lens, focus, settled list, the critic's model, time, tokens and `agentId` (its transcript, `subagents/agent-<agentId>.jsonl` under `~/.claude/projects/`, is deleted eventually), `What looks good`, the table `id | severity | verdict | finding | evidence | checked`, the `What` and `Scenario` lines of each open finding, the score, the totals line, and last:
 
 ```
 ## To do
@@ -121,11 +121,11 @@ Steps 1–5, then one line first in the reply and the ledger: `APPROVED — N/10
 
 ## 7. Fix mode
 
-After step 5, read `${CLAUDE_SKILL_DIR}/references/fix-loop.md` (the `references/fix-loop.md` file next to this one) and follow it. Reviews that never fix do not load it.
+After step 5, read and follow `${CLAUDE_SKILL_DIR}/references/fix-loop.md` (`references/fix-loop.md` next to this file).
 
 ## 8. Recheck
 
-Load the ledger (the newest in `.vogon/`, or the path given). Ticked To do items (`- [x] c3 — … answer`) are the user's answers: treat each as settled for this run. Run one focused re-review against the diff since the ledger's commit or date, verify, score, and append `## Recheck` with the updated To do list to the same ledger. Reply with the score and the ids still open. No fixes.
+Load the ledger (the newest in `.vogon/`, or the path given). Ticked To do items (`- [x] c3 — … answer`) are the user's answers: treat each as settled for this run. Run one focused re-review against `git diff <the ledger's reviewed commit>` (no commit recorded → the last one before the ledger's date). Not under git → no baseline exists, so the critic re-reads the whole target; say so in the reply. Then verify, score, and append `## Recheck` with the updated To do list to the same ledger. Reply with the score and the ids still open. No fixes.
 
 ## 9. Ask
 

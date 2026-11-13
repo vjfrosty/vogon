@@ -4,6 +4,8 @@ expected_outcome: |
   The plan file is edited in rounds; each round reports a score from the rubric; the loop stops at
   score >= 8, or after 3 rounds, or when only needs-you/taste findings remain; business decisions
   (e.g. the maintenance window, the budget) are left as questions for the user rather than invented;
-  the final reply lists score per round and what changed.
+  the final reply lists score per round and what changed. This plan has a structural flaw (a
+  hand-written rollback after a 60 GB restore), so stopping below 8 and naming the decision that
+  blocks it is a pass; the plan must not grow by more than about half.
 context:
   scaffold_script: place-files.sh

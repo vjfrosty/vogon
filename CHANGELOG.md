@@ -56,7 +56,7 @@ First release, as a Claude Code plugin with one skill and one agent.
 - Progress lines with each critic's measured time and tokens, ETAs marked as estimates, and a
   totals line.
 - No over-extension: the fix loop prefers rewording or removing, logs lines added and removed per
-  round, and stops if a round grows the target by more than about a fifth; the critic reports
+  round, and stops once the target has grown, net, by more than about a fifth; the critic reports
   bloat as `simplify`. The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
 - A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
