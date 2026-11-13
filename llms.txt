@@ -5,14 +5,16 @@
 Use it when someone wants a skeptical review before committing to a plan or shipping a change, wants the result scored, or wants it fixed and re-reviewed until it passes.
 
 - Install: `/plugin marketplace add vjfrosty/critique-skill`, then `/plugin install vogon@vogon`
-- No command needed: ask in plain words ("poke holes in X", "second opinion on my changes", "is this ready for a PR?", "rate this 1 to 10") and Claude starts the skill and picks the mode
+- No command needed: ask in plain words ("poke holes in X", "second opinion on my changes", "is this ready for a PR?", "rate this 1 to 10") and Claude picks the mode and asks once before running it (naming vogon or typing the command skips the question)
 - Review: `/vogon:vogon <target>` (a path, a commit range, `my changes`, a task id or a topic)
-- Quick take: `/vogon:vogon ask <target>`: the critic's top five findings, no ledger or score
+- Merge verdict: `/vogon:vogon stamp <target>` (also `gate`, `verdict`, `inspect`, `audit`): a review plus `APPROVED` (score >= 8, nothing important open) or `DEMOLISHED` with the blocking findings; never fixes
+- Lenses, combinable with any mode: `papertrail` (also `docs`, `comments`) checks docs, comments and examples against the code first; `loopholes` (also `edges`, `errors`, `holes`) checks error handling and edge cases first
+- Quick take: `/vogon:vogon ask <target>` (also `quick`): the critic's top five findings, no ledger or score
 - Fix: `/vogon:vogon fix <target>` asks before each round; `fix auto` does not; at most three rounds
-- Re-check: `/vogon:vogon recheck`
+- Re-check: `/vogon:vogon recheck` (also `again`): ticked items in the ledger's To do list count as the user's answers
 - Agent: `vogon:critic`, read-only (Read, Grep, Glob, Bash), inherits the caller's model; prompt with `Review target: <...>`
 - Options: `focus: <what to weigh first>`, `settled: <decisions not to raise>`, `model: opus|sonnet|haiku|fable` (default: the user's model)
-- Output: a ledger of findings with id, severity (important/advice/info), file:line evidence and one verdict (fix, needs-you, taste, wrong, settled), and a score
+- Output: a ledger of findings with id, severity (important/advice/info), file:line evidence and one verdict (fix, needs-you, taste, wrong, settled), a score, and a To do checklist of questions and proposals; saved in `.vogon/`, never overwritten (enforced by a hook)
 - Score: no important finding open -> 10 minus advice findings (lowest 5); important open -> 6 minus the extra ones (lowest 1); 8 = nothing important, at most two advice
 - Never: edits in review mode, commits, invents business facts, re-raises settled decisions
 

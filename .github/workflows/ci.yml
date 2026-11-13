@@ -54,8 +54,19 @@ jobs:
               errors.append("SKILL.md is longer than 500 lines")
           if "vogon:critic" not in skill or "agents/critic.md" not in skill:
               errors.append("SKILL.md does not call the critic agent and its fallback")
+          if re.search(r"scored 1-10|fix loop|loop that fixes", description):
+              errors.append("the skill description must list triggers, not summarise the workflow")
+          hint = str(meta.get("argument-hint") or "")
+          for word in ("stamp", "papertrail", "loopholes", "ask", "fix", "recheck"):
+              if word not in hint:
+                  errors.append(f"argument-hint does not list '{word}'")
+          for alias in ("gate", "verdict", "inspect", "audit", "docs", "comments", "edges", "errors", "holes", "quick"):
+              if f"`{alias}`" not in skill:
+                  errors.append(f"SKILL.md does not list the alias word '{alias}'")
 
-          _, agent = front_matter("agents/critic.md")
+          agent_text, agent = front_matter("agents/critic.md")
+          if "## Lenses" not in agent_text or "`papertrail`" not in agent_text or "`loopholes`" not in agent_text:
+              errors.append("critic.md must define the papertrail and loopholes lenses")
           if agent.get("name") != "critic":
               errors.append("agent name is not 'critic'")
           if agent.get("model") != "inherit":

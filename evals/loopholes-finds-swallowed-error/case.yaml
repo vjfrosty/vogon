@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: loopholes-finds-swallowed-error
+expected_outcome: |
+  Findings on the failure paths in sync.py: the broad `except Exception: pass` around the write that
+  hides failed saves while sync() returns True; the `while True` retry with no bound and no backoff;
+  and the empty batch that divides by zero in the progress line. With sync.py line evidence.
+  Nothing is edited.
+context:
+  scaffold_script: place-files.sh

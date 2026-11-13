@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: papertrail-finds-stale-docs
+expected_outcome: |
+  Findings that quote both sides: the README says the default timeout is 30 seconds but client.py
+  uses 10; the README documents a `retries=` option but the code takes `max_retries=` (so the
+  README example raises TypeError); get() is documented to return None on 404 but re-raises the
+  HTTPError. Each with README and client.py locations. Nothing is edited.
+context:
+  scaffold_script: place-files.sh

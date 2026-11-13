@@ -1,11 +1,27 @@
-// PreToolUse hook: let the vogon skill save its ledgers without a permission prompt.
+// PreToolUse hook: let the vogon skill save its ledgers without a permission prompt,
+// and never let it overwrite one.
 //
-// Allows a Write or Edit only when the target file is inside <project>/.vogon/.
+// Inside <project>/.vogon/:
+//   - Write to a new file, or Edit of any file -> allow (no prompt);
+//   - Write to a file that already exists      -> deny (ledgers are append-only;
+//     the skill saves a new one as -2, -3 or appends a round with Edit).
 // Anything else gets no answer from this hook, so Claude Code's normal permission
 // rules apply unchanged. If Node is missing or anything fails, the hook stays silent
 // and the user simply sees the usual prompt.
 
+import fs from "node:fs";
 import path from "node:path";
+
+const answer = (decision, reason) =>
+  process.stdout.write(
+    JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: decision,
+        permissionDecisionReason: reason,
+      },
+    }),
+  );
 
 let input = "";
 process.stdin.setEncoding("utf8");
@@ -23,15 +39,15 @@ process.stdin.on("end", () => {
     const norm = (p) => (sameCase ? p.toLowerCase() : p);
     if (!norm(target).startsWith(norm(ledgers))) return;
 
-    process.stdout.write(
-      JSON.stringify({
-        hookSpecificOutput: {
-          hookEventName: "PreToolUse",
-          permissionDecision: "allow",
-          permissionDecisionReason: "vogon: saving a review ledger in .vogon/",
-        },
-      }),
-    );
+    const isLedger = path.basename(target) !== ".gitignore";
+    if (event.tool_name === "Write" && isLedger && fs.existsSync(target)) {
+      answer(
+        "deny",
+        "vogon: ledgers are never overwritten. Save this one as <name>-2.md (-3, ...) or append to the existing ledger with Edit.",
+      );
+      return;
+    }
+    answer("allow", "vogon: saving a review ledger in .vogon/");
   } catch {
     // Stay silent: the normal permission prompt applies.
   }

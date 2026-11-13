@@ -9,7 +9,7 @@
     {
       "name": "vogon",
       "source": "./",
-      "description": "An independent, skeptical second opinion on plans, docs, diffs and work in progress, scored 1-10, with a bounded fix loop and a reusable read-only critic agent.",
+      "description": "An independent, skeptical second opinion on plans, docs, diffs and work in progress, scored 1-10, with a merge verdict, docs and error-handling lenses, a bounded fix loop and a reusable read-only critic agent.",
       "version": "0.0.1"
     }
   ]

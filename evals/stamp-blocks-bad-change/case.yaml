@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: stamp-blocks-bad-change
+expected_outcome: |
+  The reply's first verdict line is DEMOLISHED with a score, because prune() keeps old records and
+  deletes new ones (the comparison is reversed), which loses data. The blocking finding is named
+  with store.py line evidence. Nothing is edited, and the ledger in .vogon/ carries the same verdict.
+context:
+  scaffold_script: place-files.sh
