@@ -1,12 +1,12 @@
 ---
-name: critique
-description: Independent, skeptical second opinion on a plan, design doc, proposal, decision, commit, diff or work in progress, scored 1-10, with an optional loop that fixes and re-reviews until it scores 8. Use whenever the user asks to critique something, wants a second opinion, a devil's advocate, a skeptical or adversarial review, asks "what's wrong with this", "poke holes in", "tear apart", "sanity-check", "score", "rate" or "grade" a plan, change or doc, asks "is this ready" before committing, shipping or opening a pull request, or asks to fix something "until it passes". Not for routine edits, explaining code, or a review the user asked to do with another named tool.
-allowed-tools: Agent, Read, Grep, Glob, Bash, Write, Edit
+name: vogon
+description: Independent, skeptical second opinion on a plan, design doc, proposal, decision, commit, diff or work in progress, scored 1-10, with an optional loop that fixes and re-reviews until it scores 8. Use whenever the user asks to critique something, wants a second opinion, a devil's advocate, a skeptical or adversarial review, asks "what's wrong with this", "poke holes in", "tear apart", "sanity-check", "score", "rate" or "grade" a plan, change or doc, asks "is this ready" before committing, shipping or opening a pull request, or asks to fix something "until it passes", or mentions vogon ("vogon this", "run vogon on"). Not for routine edits, explaining code, or a review the user asked to do with another named tool.
+allowed-tools: Agent, Read, Grep, Glob, Bash, Edit, Write
 ---
 
-# Critique
+# Vogon
 
-A fresh critic, on Opus unless the user chooses otherwise, reviews the target without this conversation's reasoning. You verify what it says, score the target 1–10 from the verified findings, and hand the user a ledger. In `fix` mode you also fix what is yours to fix and loop until the score reaches 8. In `ask` mode you only pass on the critic's answer.
+A fresh critic, on the user's own model unless they name another, reviews the target without this conversation's reasoning. You verify what it says, score the target 1–10 from the verified findings, and hand the user a ledger. In `fix` mode you also fix what is yours to fix and loop until the score reaches 8. In `ask` mode you only pass on the critic's answer.
 
 **Arguments:** `$ARGUMENTS`
 - `<target>` — path, directory, commit range or topic. Review only (steps 1–5).
@@ -14,7 +14,7 @@ A fresh critic, on Opus unless the user chooses otherwise, reviews the target wi
 - `fix <target>` — review, then fix and re-review until score ≥ 8 (step 6), asking once per round before fixes are applied.
 - `fix auto <target>` — the same loop without asking: questions only the user can answer become marked proposals.
 - `recheck [ledger path]` — one focused re-review of the newest ledger for this project (step 7). No fixes.
-- Optional anywhere: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`, `model: <opus | sonnet | haiku | session>` (default `opus`).
+- Optional anywhere: `focus: <what to weigh first>`, `settled: <decisions the critic must not raise>`, `model: <session | opus | sonnet | haiku | fable>` (default `session`: the model this conversation runs on).
 
 **Without a slash.** When the user asks in their own words, read the mode from them; if the mode is unclear, use review.
 
@@ -25,7 +25,7 @@ A fresh critic, on Opus unless the user chooses otherwise, reviews the target wi
 | "fix it until it passes / scores 8", "critique and fix" | `fix` |
 | the same, plus "automatically", "without asking", "don't ask me" | `fix auto` |
 | "check again", "re-check", "did I fix it" after a ledger | `recheck` |
-| "use my model", "this model", "same model as me" | `model: session` |
+| "use Opus", "with Sonnet", "on a stronger model" | `model: opus` / `sonnet` / … |
 
 ## 1. Resolve the target
 
@@ -50,7 +50,11 @@ Decisions the critic must not re-raise, one bullet each with its source. Take wh
 
 ## 3. Spawn the critic
 
-One Agent call: `subagent_type: "general-purpose"`, with `model` set from the `model:` option: `"opus"` by default, the named model when given, and no `model` parameter at all for `session` (the critic then runs on the session's model). Use the same model for every critic in the run. Prompt = the full text of `critic_prompt.md` (next to this file), then:
+One Agent call with `subagent_type: "vogon:critic"`, the plugin's read-only critic agent. Pass a `model` parameter only when the user named one (`opus`, `sonnet`, `haiku`, `fable`); with the default `session`, pass none and the agent runs on this conversation's model. Use the same model for every critic in the run.
+
+If that agent is not available (the skill was installed on its own, without the plugin), use `subagent_type: "general-purpose"` with the same `model` rule, and put the body of `${CLAUDE_PLUGIN_ROOT}/agents/critic.md` (below its front matter) at the top of the prompt; in a manual install that file is `../../agents/critic.md` from this skill's folder.
+
+The prompt, after the agent's own instructions:
 
 ```
 Review target: <target>
@@ -97,7 +101,7 @@ So 8 means: nothing important, at most two advice-level findings. The critic's o
 
 ## 5. Archive and reply
 
-Save to `~/.claude/skills/critique/runs/<project-dir-name>/<YYYY-MM-DD>-<slug>.md`, where the slug is the target's file name or a few words for it. If that file exists, add `-2`, `-3`, … — never overwrite a ledger. Contents: target, focus, settled list, the critic's answer verbatim, the ledger table, the score. Reply with:
+Save with the Write tool to `.vogon/<YYYY-MM-DD>-<slug>.md` in the project root. It stays inside the project, so Claude Code does not ask before each save, and it stays out of git: the first time, also write `.vogon/.gitignore` containing the single line `*`, which makes git ignore the whole folder. Never edit the user's own `.gitignore` or anything under `.git/`. The slug is the target's file name or a few words for it. If that file exists, add `-2`, `-3`, … — never overwrite a ledger. Contents: target, focus, settled list, the critic's answer verbatim, the ledger table, the score. Reply with:
 
 1. `Ledger: <path>`
 2. `Score N/10 (critic said M/10) — X fix, Y needs-you, Z taste, W wrong, V settled; D dropped (no evidence)`
@@ -118,11 +122,11 @@ After step 5, repeat up to **3 rounds**:
 
 Final reply: the score per round (`3 → 6 → 8`), what was fixed, the proposals to confirm, and what is left. The loop does not always reach 8 in three rounds; when it does not, say so and list what still stands. Never run a fourth round.
 
-## 7. Recheck (`/critique recheck`)
+## 7. Recheck (`/vogon:vogon recheck`)
 
 After the user has acted on a ledger: load it (the newest for this project, or the path given), run one focused re-review against the diff since the ledger's date or commit, verify, score, and append `## Recheck` to the same ledger. Reply with the score and the ids still open. No fixes.
 
-## 8. Ask (`/critique ask`)
+## 8. Ask (`/vogon:vogon ask`)
 
 A quick opinion while working. Resolve the target (step 1), skip the settled list unless the user gave one, and spawn the critic (step 3) with this line after the target block:
 
@@ -130,4 +134,4 @@ A quick opinion while working. Resolve the target (step 1), skip the settled lis
 Quick opinion: give at most 5 findings, most severe first, in the usual format, and skip the score line.
 ```
 
-Pass on the critic's answer as it is, under one line naming the critic's model. Do not verify, score, archive or fix. End with one line: `For a verified, scored ledger: /critique <target>`.
+Pass on the critic's answer as it is, under one line naming the critic's model. Do not verify, score, archive or fix. End with one line: `For a verified, scored ledger: /vogon:vogon <target>`.

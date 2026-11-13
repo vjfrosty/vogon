@@ -1,0 +1,13 @@
+{
+  "name": "vogon",
+  "version": "0.0.1",
+  "description": "An independent, skeptical second opinion on plans, docs, diffs and work in progress, scored 1-10, with a bounded fix loop and a reusable read-only critic agent.",
+  "author": {
+    "name": "Yasen Ivanov",
+    "url": "https://github.com/vjfrosty"
+  },
+  "homepage": "https://github.com/vjfrosty/critique-skill",
+  "repository": "https://github.com/vjfrosty/critique-skill",
+  "license": "MIT",
+  "keywords": ["code-review", "plan-review", "critique", "second-opinion", "quality", "agents"]
+}

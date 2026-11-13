@@ -1,22 +1,23 @@
-# critique
+# vogon
 
-> A Claude Code skill that gives an independent, skeptical second opinion on a plan, design doc, proposal, commit range, uncommitted changes or work in progress, scores it 1-10 by a fixed rule, and can fix and re-review it until it scores 8. A fresh Claude Opus critic reviews the target; every claim is verified against the code before it is shown; business decisions come back as questions, never guesses. MIT.
+> A Claude Code plugin that gives an independent, skeptical second opinion on a plan, design doc, proposal, commit range, uncommitted changes or work in progress, scores it 1-10 by a fixed rule, and can fix and re-review it until it scores 8. It ships the `vogon` skill (review, ledger, score, fix loop) and the read-only `critic` agent. The critic runs on the user's own model by default; every claim is verified against the code before it is shown; business decisions come back as questions, never guesses. MIT.
 
 Use it when someone wants a skeptical review before committing to a plan or shipping a change, wants the result scored, or wants it fixed and re-reviewed until it passes.
 
-- Install: `git clone https://github.com/vjfrosty/critique-skill "$HOME/.claude/skills/critique"` (Windows: use `$USERPROFILE` instead of `$HOME`)
-- No slash needed: ask in plain words ("poke holes in X", "second opinion on my changes", "is this ready for a PR?", "rate this 1 to 10") and Claude starts the skill and picks the mode
-- Review: `/critique <target>` (a path, a commit range, `my changes`, a task id or a topic)
-- Quick take: `/critique ask <target>`: the critic's top five findings, no ledger or score
-- Fix: `/critique fix <target>` asks before each round; `/critique fix auto <target>` does not; at most three rounds
-- Re-check: `/critique recheck`
-- Options: `focus: <what to weigh first>`, `settled: <decisions not to raise>`, `model: opus|sonnet|haiku|session` (critic's model, default opus)
+- Install: `/plugin marketplace add vjfrosty/critique-skill`, then `/plugin install vogon@vogon`
+- No command needed: ask in plain words ("poke holes in X", "second opinion on my changes", "is this ready for a PR?", "rate this 1 to 10") and Claude starts the skill and picks the mode
+- Review: `/vogon:vogon <target>` (a path, a commit range, `my changes`, a task id or a topic)
+- Quick take: `/vogon:vogon ask <target>`: the critic's top five findings, no ledger or score
+- Fix: `/vogon:vogon fix <target>` asks before each round; `fix auto` does not; at most three rounds
+- Re-check: `/vogon:vogon recheck`
+- Agent: `vogon:critic`, read-only (Read, Grep, Glob, Bash), inherits the caller's model; prompt with `Review target: <...>`
+- Options: `focus: <what to weigh first>`, `settled: <decisions not to raise>`, `model: opus|sonnet|haiku|fable` (default: the user's model)
 - Output: a ledger of findings with id, severity (important/advice/info), file:line evidence and one verdict (fix, needs-you, taste, wrong, settled), and a score
 - Score: no important finding open -> 10 minus advice findings (lowest 5); important open -> 6 minus the extra ones (lowest 1); 8 = nothing important, at most two advice
 - Never: edits in review mode, commits, invents business facts, re-raises settled decisions
 
 ## Docs
 
-- [README](https://github.com/vjfrosty/critique-skill/blob/main/README.md): usage, the ledger, the score, fix mode, FAQ
-- [SKILL.md](https://github.com/vjfrosty/critique-skill/blob/main/SKILL.md): the orchestration the skill follows
-- [critic_prompt.md](https://github.com/vjfrosty/critique-skill/blob/main/critic_prompt.md): the critic's instructions and output format
+- [README](https://github.com/vjfrosty/critique-skill/blob/main/README.md): install, usage, the ledger, the score, fix mode, the agent, FAQ
+- [skills/vogon/SKILL.md](https://github.com/vjfrosty/critique-skill/blob/main/skills/vogon/SKILL.md): the orchestration the skill follows
+- [agents/critic.md](https://github.com/vjfrosty/critique-skill/blob/main/agents/critic.md): the critic's instructions, tools and output format

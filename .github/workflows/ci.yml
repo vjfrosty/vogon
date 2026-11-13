@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  # The skill is prose; CI checks that Claude Code can load it and that its parts fit together.
+  # The plugin is prose; CI checks that Claude Code can load it and that its parts fit together.
   structure:
     runs-on: ubuntu-latest
     steps:
@@ -18,30 +18,55 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pyyaml
-      - name: Front matter, references and test cases
+      - name: Plugin files, front matter, references and test cases
         shell: python
         run: |
-          import pathlib, re, sys, yaml
+          import json, pathlib, re, sys, yaml
 
           errors = []
-          skill = pathlib.Path("SKILL.md").read_text(encoding="utf-8")
-          match = re.match(r"^---\n(.*?)\n---\n", skill, re.S)
-          if not match:
-              sys.exit("SKILL.md has no front matter")
-          meta = yaml.safe_load(match.group(1))
-          if meta.get("name") != "critique":
-              errors.append("front matter name is not 'critique'")
+
+          def front_matter(path):
+              text = pathlib.Path(path).read_text(encoding="utf-8")
+              match = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+              if not match:
+                  sys.exit(f"{path} has no front matter")
+              return text, yaml.safe_load(match.group(1))
+
+          plugin = json.loads(pathlib.Path(".claude-plugin/plugin.json").read_text(encoding="utf-8"))
+          market = json.loads(pathlib.Path(".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
+          if plugin.get("name") != "vogon":
+              errors.append("plugin.json name is not 'vogon'")
+          entries = [p for p in market.get("plugins", []) if p.get("name") == plugin.get("name")]
+          if len(entries) != 1 or entries[0].get("source") != "./":
+              errors.append("marketplace.json must list the plugin once with source './'")
+          elif entries[0].get("version") != plugin.get("version"):
+              errors.append("plugin.json and marketplace.json versions differ")
+          if f"## [{plugin.get('version')}]" not in pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8"):
+              errors.append(f"CHANGELOG.md has no section for {plugin.get('version')}")
+
+          skill, meta = front_matter("skills/vogon/SKILL.md")
+          if meta.get("name") != "vogon":
+              errors.append("skill name is not 'vogon'")
           description = meta.get("description") or ""
           if not description or len(description) > 1024:
-              errors.append(f"description is empty or longer than 1024 characters ({len(description)})")
+              errors.append(f"skill description is empty or longer than 1024 characters ({len(description)})")
           if len(skill.splitlines()) > 500:
               errors.append("SKILL.md is longer than 500 lines")
+          if "vogon:critic" not in skill or "agents/critic.md" not in skill:
+              errors.append("SKILL.md does not call the critic agent and its fallback")
 
-          for name in ("critic_prompt.md", "README.md", "LICENSE", "CHANGELOG.md"):
+          _, agent = front_matter("agents/critic.md")
+          if agent.get("name") != "critic":
+              errors.append("agent name is not 'critic'")
+          if agent.get("model") != "inherit":
+              errors.append("the critic agent must inherit the caller's model")
+          tools = {t.strip() for t in str(agent.get("tools", "")).split(",")}
+          if not tools or tools & {"Edit", "Write", "NotebookEdit"} or "" in tools:
+              errors.append("the critic agent must list its tools and must not have Edit or Write")
+
+          for name in ("README.md", "LICENSE", "CHANGELOG.md", "llms.txt"):
               if not pathlib.Path(name).is_file():
                   errors.append(f"{name} is missing")
-          if "critic_prompt.md" not in skill:
-              errors.append("SKILL.md does not reference critic_prompt.md")
 
           for case in sorted(pathlib.Path("evals").iterdir()):
               if not case.is_dir():
@@ -63,3 +88,16 @@ jobs:
           for error in errors:
               print(f"::error::{error}")
           sys.exit(1 if errors else 0)
+
+  # The hook may allow writes inside <project>/.vogon/ only.
+  hook:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node tests/allow-ledger.test.cjs

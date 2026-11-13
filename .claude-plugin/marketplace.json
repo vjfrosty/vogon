@@ -1,0 +1,16 @@
+{
+  "name": "vogon",
+  "owner": {
+    "name": "Yasen Ivanov",
+    "url": "https://github.com/vjfrosty"
+  },
+  "description": "The vogon plugin for Claude Code: a scored second-opinion review skill and a read-only critic agent.",
+  "plugins": [
+    {
+      "name": "vogon",
+      "source": "./",
+      "description": "An independent, skeptical second opinion on plans, docs, diffs and work in progress, scored 1-10, with a bounded fix loop and a reusable read-only critic agent.",
+      "version": "0.0.1"
+    }
+  ]
+}
