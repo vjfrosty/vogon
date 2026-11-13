@@ -41,7 +41,7 @@ It ships two parts:
 | Review, stamp and lenses | 4 test cases (planted bugs, a data-loss bug under `stamp`, stale docs, swallowed errors): all 17 checks passed, 2½–3½ minutes each |
 | Starting from plain words | 22 requests run at least twice: never started on the 11 that were not review requests; "what edge cases did I miss" is the weakest trigger |
 | Asking before it starts | Started from your own words, it asks once before any critic runs; naming vogon or typing the command skips the question |
-| Fix loop | On the deploy-plan test it reached 8 in 2 of 7 runs and otherwise stopped at 6–7, in 11–15 minutes for about $3. Each round fixes nearly every open finding, but each re-review finds about one new important and three new advice findings in the text just written, so the score stalls; a re-review that reports only new important problems is being tested. When it stops below 8, it names the decision that blocks it |
+| Fix loop | On the deploy-plan test: 1 → 5 → 6 → 10 and 2 → 6 → 10, in 6½–9 minutes for about $2. Re-reviews report only new important problems the fixes cause, not new wording advice on freshly written text; before that change, nine runs stalled at 6–8 in 11–15 minutes. When it stops below 8, it names the decision that blocks it |
 | Ledger hook | 13 tests pass on Linux, Windows and macOS in CI |
 | Cost | About 350 tokens always loaded; about 3.7k for the skill and 2.6k for each critic when it runs (`claude plugin details vogon@vogon`) |
 

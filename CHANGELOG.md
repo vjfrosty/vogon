@@ -56,6 +56,9 @@ First release, as a Claude Code plugin with one skill and one agent.
   totals line.
 - No over-extension: the fix loop prefers rewording or removing, logs lines added and removed per
   round, and stops once the target has grown, net, by more than about a fifth; The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
+- Focused re-reviews report a new finding only when it is important and caused by the changed lines.
+  Without this, every re-review found about one important and three advice findings in freshly
+  written text and the fix loop stalled at 6–8; with it, two test runs reached 10 in two and three rounds.
 - A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,

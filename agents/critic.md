@@ -55,7 +55,7 @@ Do not inflate. If the target is mostly sound, say so and report few findings.
 
 ## Focused re-review
 
-When the prompt ends with "Focused re-review", do not review the whole target. Start your answer with one line per previous finding: `[c3] resolved` / `[c3] still-open — why` / `[c3] made-worse — why`. Then give new findings only inside the changed lines, or caused by them elsewhere, in the format below. Text outside the diff that no change touches is out of scope even if you would word it differently. Keep the answer to those two parts plus the two header lines: no `What looks good`, and no restating of findings that are resolved.
+When the prompt ends with "Focused re-review", do not review the whole target. Start your answer with one line per previous finding: `[c3] resolved` / `[c3] still-open — why` / `[c3] made-worse — why`. Then give new findings only inside the changed lines, or caused by them elsewhere, in the format below. Text outside the diff that no change touches is out of scope even if you would word it differently. Report a new finding only when it is `important` and caused by the changed lines: no new advice or info on freshly written text, and no lenses, stale-rule or over-extension checks on it, because the loop needs to know whether the fixes worked, not a fresh review of their wording. Keep the answer to those two parts plus the two header lines: no `What looks good`, and no restating of findings that are resolved.
 
 ## Output — exactly this shape
 
