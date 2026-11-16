@@ -18,10 +18,11 @@ First release, as a Claude Code plugin with one skill and one agent.
   `needs-you`, `taste`, `wrong` or `settled`. `info` findings carry no verdict.
 - A score from 1 to 10 by a fixed rule: no `important` open → 10 minus `advice` (lowest 5);
   `important` open → 6 minus the extra ones (lowest 1).
-- `fix` and `fix auto`: up to three rounds of minimal fixes, each followed by a focused
-  re-review (the previous findings plus the changed lines only), until the score reaches 8.
-  `fix` asks once per round; `fix auto` never asks and writes values only the user can set as
-  marked proposals, which leave the score and are listed for confirmation.
+- `fix` and `fix auto`: up to three rounds of fixes, each followed by a focused re-review (the
+  previous findings plus the changed lines only), aiming at a score of 8, then a final full
+  review whose score is the one reported. `fix` asks once per round and asks the user's decisions
+  before the first; `fix auto` never asks and writes values only the user can set as marked
+  proposals, which leave the score and are listed for confirmation.
 - `stamp` (also `gate`, `verdict`, `inspect`, `audit`): a full review that starts with
   `APPROVED` (score 8 or more, nothing important open) or `DEMOLISHED` with the blocking findings.
 - Lenses, combinable with any mode: `papertrail` (also `docs`, `comments`) checks docs, comments,
@@ -54,12 +55,18 @@ First release, as a Claude Code plugin with one skill and one agent.
   disproving quote; files changed during a review are reported.
 - Progress lines with each critic's measured time and tokens, ETAs marked as estimates, and a
   totals line.
-- No over-extension: the fix loop prefers rewording or removing, logs lines added and removed per
-  round, and stops once the target has grown, net, by more than about a fifth; The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
+- No over-extension: the fix loop prefers rewording or removing, logs the target's word count
+  after each round, and starts no further round once it has passed about twice its starting
+  length (four test runs ended at 2.1 to 2.6 times). Words are counted because lines hid the
+  growth: a test plan "stayed at 30 lines" while going from 231 to 638 words. The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
 - Focused re-reviews report a new finding only when it is important and caused by the changed lines.
   Without this, every re-review found about one important and three advice findings in freshly
-  written text and the fix loop stalled at 6–8; with it, two test runs reached 10 in two and three rounds.
-- A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
+  written text and the fix loop stalled at 6–8. This only speeds up the loop: its round scores say
+  whether the fixes worked, not how good the result is.
+- Fix mode fixes the cause of each finding and the steps that rely on the same thing, and ends with a
+  final full review whose score is the one reported (a blind check rated two plans the loop scored
+  10 at 4 and 6). In four runs of this version the loop reported 4, 5, 5 and 4, and a blind check
+  of the same plans gave 5, 6, 6 and 6.- A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,
   `stamp-blocks-bad-change`, `papertrail-finds-stale-docs`, `loopholes-finds-swallowed-error`, `ask-gives-quick-take` and `recheck-reads-ticked-answers`.

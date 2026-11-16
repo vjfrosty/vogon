@@ -2,10 +2,14 @@ schema_version: "1.1"
 name: fixes-plan-to-eight
 expected_outcome: |
   The plan file is edited in rounds; each round reports a score from the rubric; the loop stops at
-  score >= 8, or after 3 rounds, or when only needs-you/taste findings remain; business decisions
-  (e.g. the maintenance window, the budget) are left as questions for the user rather than invented;
-  the final reply lists score per round and what changed. This plan has a structural flaw (a
-  hand-written rollback after a 60 GB restore), so stopping below 8 and naming the decision that
-  blocks it is a pass; the plan must not grow by more than about half.
+  score >= 8, or after 3 rounds, or when only needs-you/taste findings remain, or when the plan has
+  passed about twice its starting length in words. Then one final full review of the whole plan is
+  run: its score is reported as the plan's score, and its findings are listed, not fixed. Business
+  decisions (e.g. the maintenance window, the budget) are left as questions or marked proposals for
+  the user rather than invented; the final reply lists the score per round, the final review's
+  score, the word growth and what changed. This plan has a structural flaw (a hand-written rollback
+  after a 60 GB restore), so a final score below 8 that names the decision that blocks it is a
+  pass; the plan must not end at more than about 2.5 times its original word count, and no fix
+  round may start after it has clearly passed twice that count.
 context:
   scaffold_script: place-files.sh

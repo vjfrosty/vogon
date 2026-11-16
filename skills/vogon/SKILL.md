@@ -30,7 +30,7 @@ A lens combines with any mode. Options: `focus:`, `settled:` (decisions not to r
 
 ## 0. Confirm when you started it yourself
 
-If the user's latest message starts with `/vogon` or names vogon, go on. Otherwise you chose this skill from their words: resolve the target (step 1), then ask once with AskUserQuestion before any critic runs — `Run vogon <mode> [lens] on <target>?` — with **Run it**, **Quick take instead** (`ask`) and **No, answer normally**; for `fix`, say it can take up to 3 rounds. On **No**, answer without the skill. Without AskUserQuestion (a headless run), do not start: begin the reply with `Run /vogon:vogon <mode> <target> to review this.` and answer normally.
+If the user's latest message starts with `/vogon` or names vogon, go on. Otherwise you chose this skill from their words: resolve the target (step 1), then ask once with AskUserQuestion before any critic runs — `Run vogon <mode> [lens] on <target>?` — with **Run it**, **Quick take instead** (`ask`) and **No, answer normally**; for `fix`, say it can take up to 3 rounds and a final full review. On **No**, answer without the skill. Without AskUserQuestion (a headless run), do not start: begin the reply with `Run /vogon:vogon <mode> <target> to review this.` and answer normally.
 
 ## Progress and cost
 
