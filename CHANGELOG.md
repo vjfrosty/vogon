@@ -66,7 +66,8 @@ First release, as a Claude Code plugin with one skill and one agent.
 - Fix mode fixes the cause of each finding and the steps that rely on the same thing, and ends with a
   final full review whose score is the one reported (a blind check rated two plans the loop scored
   10 at 4 and 6). In six runs of this version the loop reported 4 or 5, and a blind check of
-  the same plans gave 5 or 6.- The critic does not read `.vogon/` unless the prompt names a file there. In four test runs the
+  the same plans gave 5 or 6.
+- The critic does not read `.vogon/` unless the prompt names a file there. In four test runs the
   final full review had opened the ledger and the scratch copies, so it was not independent of
   the earlier rounds. (This did not make it faster: it takes 140–210 seconds either way.)
 - The last fix round's focused re-review and the final full review are sent together, because

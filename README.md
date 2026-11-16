@@ -315,7 +315,7 @@ Either three rounds have run, the target has passed about twice its starting len
 No. The plugin's hook (`hooks/allow-ledger.mjs`) answers "allow" for writes inside the current project's `.vogon/` folder, "deny" for a write over an existing ledger, and stays silent for everything else, so your normal rules apply to all other files. The hook runs with Node.js; without Node, it does nothing and you see the usual permission prompt once.
 
 **How long does it take?**
-A review takes a few minutes. Each fix round adds a focused re-review, which is shorter than the first review because it reads only the previous findings and the changed lines. Fix mode ends with one more full review, which takes about as long as the first. On our test plan, a whole fix run (first review, one or two rounds, final review) took 8 to 12 minutes.
+A review takes a few minutes. Each fix round adds a focused re-review, which is shorter than the first review because it reads only the previous findings and the changed lines. Fix mode ends with one more full review, which took 2 to 3.5 minutes in our tests, against about 1.5 for the first. On our test plan, a whole fix run (first review, one or two rounds, final review) took 8 to 12 minutes.
 
 ## Project layout
 
