@@ -57,7 +57,7 @@ First release, as a Claude Code plugin with one skill and one agent.
   totals line.
 - No over-extension: the fix loop prefers rewording or removing, logs the target's word count
   after each round, and starts no further round once it has passed about twice its starting
-  length (four test runs ended at 2.1 to 2.6 times). Words are counted because lines hid the
+  length (six test runs ended at 2.0 to 2.6 times). Words are counted because lines hid the
   growth: a test plan "stayed at 30 lines" while going from 231 to 638 words. The fix loop lives in `references/fix-loop.md` and loads only in fix mode.
 - Focused re-reviews report a new finding only when it is important and caused by the changed lines.
   Without this, every re-review found about one important and three advice findings in freshly
@@ -65,8 +65,13 @@ First release, as a Claude Code plugin with one skill and one agent.
   whether the fixes worked, not how good the result is.
 - Fix mode fixes the cause of each finding and the steps that rely on the same thing, and ends with a
   final full review whose score is the one reported (a blind check rated two plans the loop scored
-  10 at 4 and 6). In four runs of this version the loop reported 4, 5, 5 and 4, and a blind check
-  of the same plans gave 5, 6, 6 and 6.- A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
+  10 at 4 and 6). In six runs of this version the loop reported 4 or 5, and a blind check of
+  the same plans gave 5 or 6.- The critic does not read `.vogon/` unless the prompt names a file there. In four test runs the
+  final full review had opened the ledger and the scratch copies, so it was not independent of
+  the earlier rounds. (This did not make it faster: it takes 140–210 seconds either way.)
+- The last fix round's focused re-review and the final full review are sent together, because
+  nothing is fixed after either. This saves the re-review's 35–95 seconds: two test runs took 8 and 12 minutes, against 13–15 before.
+- A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,
   `stamp-blocks-bad-change`, `papertrail-finds-stale-docs`, `loopholes-finds-swallowed-error`, `ask-gives-quick-take` and `recheck-reads-ticked-answers`.

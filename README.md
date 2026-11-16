@@ -41,7 +41,7 @@ It ships two parts:
 | Review, stamp and lenses | 4 test cases (planted bugs, a data-loss bug under `stamp`, stale docs, swallowed errors): all 17 checks passed, 2½–3½ minutes each |
 | Starting from plain words | 22 requests run at least twice: never started on the 11 that were not review requests; "what edge cases did I miss" is the weakest trigger |
 | Asking before it starts | Started from your own words, it asks once before any critic runs; naming vogon or typing the command skips the question |
-| Fix loop | On the deploy-plan test the fixes always improve the plan: a blind full review rated the original 1/10 and ten fixed versions 4–6/10; none reached 8. Earlier versions of the loop overstated their result (two runs scored themselves 10 while a blind review gave 4 and 6), so the reported score now comes from a final full review. Four runs of the current loop (2026-11-16) reported 4, 5, 5 and 4; a blind review of the same plans gave 5, 6, 6 and 6. Each took 13–15 minutes and $3.10–3.50. The plans ended at 2.1 to 2.6 times their starting length: the growth limit of about double stopped a third round in every run, but did not hold the plan to double |
+| Fix loop | On the deploy-plan test the fixes always improve the plan: a blind full review rated the original 1/10 and twelve fixed versions 4–6/10; none reached 8. Earlier versions of the loop overstated their result (two runs scored themselves 10 while a blind review gave 4 and 6), so the reported score now comes from a final full review. Six runs of the current loop (2026-11-16) reported 4 or 5; a blind review of the same plans gave 5 or 6. The first four took 13–15 minutes and $3.10–3.50; the last two, with the final review sent beside the last re-review, took 8 and 12 minutes and $2.36 and $3.05. The plans ended at 2.0 to 2.6 times their starting length: the growth limit of about double stops further rounds, but does not hold the plan to double |
 | Ledger hook | 13 tests pass on Linux, Windows and macOS in CI |
 | Cost | About 350 tokens always loaded; about 3.7k for the skill and 2.6k for each critic when it runs (`claude plugin details vogon@vogon`) |
 
@@ -241,9 +241,9 @@ The score comes from the verified findings, by a fixed rule, so two runs on the 
 4. It logs the target's word count against the start after each round. Once the target has passed about twice its starting length, that round is the last: that much new text needs your read, not more fixes.
 5. A fresh critic does a **focused re-review**: it checks each previous finding and looks for new problems only in the lines that changed.
 
-The loop stops at a score of 8 or more, when nothing left is its to fix, at the growth limit, or after the third round. Then a fresh critic does one **final full review** of the whole target. Its score is the one reported, and its findings are listed for you, not fixed. A finding answered by a proposal leaves the score, and the reply lists the proposals so you can confirm or change them. It never commits; you do.
+The loop stops at a score of 8 or more, when nothing left is its to fix, at the growth limit, or after the third round. Then a fresh critic does one **final full review** of the whole target; when a round is already known to be the last, this review runs beside that round's re-review to save time. Its score is the one reported, and its findings are listed for you, not fixed. A finding answered by a proposal leaves the score, and the reply lists the proposals so you can confirm or change them. It never commits; you do.
 
-**Expect a better target, not a finished one.** On our weakest test plan, which a blind full review rates 1/10, ten fixed versions were rated 4 to 6: each fresh full review of a fixed plan still found one or two new important problems, and two of those already cap the score at 5. The round scores inside the loop run higher, because a focused re-review only checks whether the fixes worked. The reply gives both, and lists exactly what still stands.
+**Expect a better target, not a finished one.** On our weakest test plan, which a blind full review rates 1/10, twelve fixed versions were rated 4 to 6: each fresh full review of a fixed plan still found one or two new important problems, and two of those already cap the score at 5. The round scores inside the loop run higher, because a focused re-review only checks whether the fixes worked. The reply gives both, and lists exactly what still stands.
 
 `recheck` runs the same focused re-review once, after you have acted on a ledger yourself.
 
@@ -272,7 +272,7 @@ The lenses follow the pattern of Anthropic's own review plugin (`pr-review-toolk
 
 ## Why vogon
 
-- **Independent.** The critic is a fresh subagent that has not seen your conversation, so it is not anchored on the reasoning that produced the plan.
+- **Independent.** The critic is a fresh subagent that has not seen your conversation, so it is not anchored on the reasoning that produced the plan. It also stays out of `.vogon/`, so an earlier ledger cannot anchor a later review.
 - **Verified.** The critic's claims are checked against the code before you see them. A mistaken claim is shown as `wrong`, with how it was checked, instead of being passed on.
 - **No invented facts.** When the right answer depends on something only you know, the finding becomes a question.
 - **Remembers your decisions.** It collects what you have already settled from your `settled:` argument, the project's Claude memory and any `docs/decisions` or `adr/` folder, and the critic may not raise those again.
@@ -315,7 +315,7 @@ Either three rounds have run, the target has passed about twice its starting len
 No. The plugin's hook (`hooks/allow-ledger.mjs`) answers "allow" for writes inside the current project's `.vogon/` folder, "deny" for a write over an existing ledger, and stays silent for everything else, so your normal rules apply to all other files. The hook runs with Node.js; without Node, it does nothing and you see the usual permission prompt once.
 
 **How long does it take?**
-A review takes a few minutes. Each fix round adds a focused re-review, which is shorter than the first review because it reads only the previous findings and the changed lines. Fix mode ends with one more full review, which takes about as long as the first. On our test plan, a whole fix run (first review, two or three rounds, final review) took 13 to 15 minutes.
+A review takes a few minutes. Each fix round adds a focused re-review, which is shorter than the first review because it reads only the previous findings and the changed lines. Fix mode ends with one more full review, which takes about as long as the first. On our test plan, a whole fix run (first review, one or two rounds, final review) took 8 to 12 minutes.
 
 ## Project layout
 

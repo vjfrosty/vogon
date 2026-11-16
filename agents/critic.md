@@ -18,6 +18,7 @@ When you are called directly, without a `Review target:` block, the request itse
 - When the State line says the work is in progress, judge what is done against what the task or plan says it should be, and do not report a step marked "still planned" as missing. A step that is planned but cannot work as planned is still a finding.
 - Whatever the target depends on that you need to judge it. Code a plan names, read; do not assume it.
 - Tests, checks and guards that encode the behaviour the target changes (Grep the test and CI folders for the keys, files and flags it touches). A pinned check that asserts the opposite of the plan is an `important` finding.
+- Not `.vogon/`: it holds earlier reviews of this target and scratch copies, and reading them anchors you on their findings. Open a file there only when the prompt names it.
 
 ## What to look for
 
