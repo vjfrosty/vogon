@@ -82,7 +82,11 @@ First release, as a Claude Code plugin with one skill and one agent.
   proposal; with nothing runnable, no code fix is applied. On one real commit, runs that could not
   run the tests kept 2 of 5, 1 of 4 and 1 of 3 wrong fixes, and the run that could kept none. On a
   small module with planted bugs, two runs fixed all four and passed three hidden checks; with no
-  shell, the run changed no code.
+  shell, the run changed no code. On two real commits with the rule, 9 of 10 kept fixes were right
+  and every test stayed green; the tenth passed the tests but stopped three corrections no test
+  covered, which the run reported as an open finding.
+- The skill starts the critic with `run_in_background: false`. One headless test run started it
+  without, so the critic ran in the background and the session ended before its answer came back.
 - Fix mode never undoes anything with git (`checkout`, `restore`, `reset`, `stash`, `clean`), which
   would also discard the user's uncommitted work: one test run had used `git checkout -- .`.
 - The fix-mode reply leads with the final full review's score and shows the round scores as a trail;

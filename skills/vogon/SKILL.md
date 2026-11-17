@@ -58,7 +58,7 @@ Decisions not to re-raise, each with its source: the `settled:` argument and thi
 
 ## 3. Spawn the critic
 
-One Agent call with `subagent_type: "vogon:critic"`; pass `model` only when the user named one, the same for every critic in the run. Without the plugin's agent, use `general-purpose` with the body of `agents/critic.md` (`${CLAUDE_PLUGIN_ROOT}/agents/critic.md`, or `../../agents/critic.md` from this folder) atop the prompt.
+One Agent call with `subagent_type: "vogon:critic"` and `run_in_background: false`: every later step needs its answer, and a headless run that does not wait ends without it. Pass `model` only when the user named one, the same for every critic in the run. Without the plugin's agent, use `general-purpose` with the body of `agents/critic.md` (`${CLAUDE_PLUGIN_ROOT}/agents/critic.md`, or `../../agents/critic.md` from this folder) atop the prompt.
 
 ```
 Review target: <target>
