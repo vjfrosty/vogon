@@ -39,6 +39,10 @@ First release, as a Claude Code plugin with one skill and one agent.
   for the 11 near-misses.
 - `critic` agent (`vogon:critic`): the reviewer on its own, read-only by its tool list, usable
   directly ("ask the critic…") and from other skills and workflows.
+- The critic's tool list and the skill's allowed tools include PowerShell. Where Claude Code's shell
+  tool is PowerShell, the critic had no shell at all and could not run `git show` or `git diff`: it
+  reviewed a commit from the files alone. Found by reviewing real commits; every earlier test
+  reviewed a plan file, which needs no git.
 - The critic runs on the user's own model by default; `model: opus | sonnet | haiku | fable`
   chooses another.
 - Settled decisions are collected from the `settled:` argument, the project's Claude memory

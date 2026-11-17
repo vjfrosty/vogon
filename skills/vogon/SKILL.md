@@ -2,7 +2,7 @@
 name: vogon
 description: Use when the user wants a critique, second opinion, devil's advocate or skeptical review of a plan, design doc, proposal, decision, commit, diff, documentation or work in progress; asks "what's wrong with this", to "poke holes in", "tear apart" or "sanity-check" it; asks to score, rate or grade it; asks "is this ready", "can I merge / ship this" or wants an approve-or-block verdict; asks "are the docs still right", "do the comments match the code", "what edge cases did I miss" or "check the error handling" about existing work; asks to fix something "until it passes"; or mentions vogon ("vogon this", "run vogon on"). Not for routine edits, explaining code, or a review the user asked to do with another named tool.
 argument-hint: "[stamp | papertrail | loopholes | ask | fix | fix auto | recheck] <target>"
-allowed-tools: Agent, AskUserQuestion, Read, Grep, Glob, Bash, Edit, Write
+allowed-tools: Agent, AskUserQuestion, Read, Grep, Glob, Bash, PowerShell, Edit, Write
 ---
 
 # Vogon

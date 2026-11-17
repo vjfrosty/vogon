@@ -12,7 +12,7 @@ Use it when someone wants a skeptical review before committing to a plan or ship
 - Quick take: `/vogon:vogon ask <target>` (also `quick`): the critic's top five findings, no ledger or score
 - Fix: `/vogon:vogon fix <target>` asks before each round; `fix auto` does not; at most three rounds, then a final full review whose score is the one reported
 - Re-check: `/vogon:vogon recheck` (also `again`): ticked items in the ledger's To do list count as the user's answers
-- Agent: `vogon:critic`, read-only (Read, Grep, Glob, Bash), inherits the caller's model; prompt with `Review target: <...>`
+- Agent: `vogon:critic`, read-only (Read, Grep, Glob, Bash, PowerShell), inherits the caller's model; prompt with `Review target: <...>`
 - Options: `focus: <what to weigh first>`, `settled: <decisions not to raise>`, `model: session|opus|sonnet|haiku|fable` (default `session`: the user's model)
 - Output: a ledger of findings with id, severity (important/advice/info), file:line evidence and one verdict (fix, needs-you, taste, wrong, settled), a score, and a To do checklist of questions and proposals; saved in `.vogon/`, never overwritten (enforced by a hook)
 - Score: no important finding open -> 10 minus advice findings (lowest 5); important open -> 6 minus the extra ones (lowest 1); 8 = nothing important, at most two advice

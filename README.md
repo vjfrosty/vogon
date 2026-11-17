@@ -42,6 +42,7 @@ It ships two parts:
 | Starting from plain words | 22 requests run at least twice: never started on the 11 that were not review requests; "what edge cases did I miss" is the weakest trigger |
 | Asking before it starts | Started from your own words, it asks once before any critic runs; naming vogon or typing the command skips the question |
 | Fix loop | On the deploy-plan test the fixes always improve the plan: a blind full review rated the original 1/10 and twelve fixed versions 4–6/10; none reached 8. Earlier versions of the loop overstated their result (two runs scored themselves 10 while a blind review gave 4 and 6), so the reported score now comes from a final full review. Six runs of the current loop (2026-11-16) reported 4 or 5; a blind review of the same plans gave 5 or 6. The first four took 13–15 minutes and $3.10–3.50; the last two, with the final review sent beside the last re-review, took 8 and 12 minutes and $2.36 and $3.05. The plans ended at 2.0 to 2.6 times their starting length: the growth limit of about double stops further rounds, but does not hold the plan to double |
+| Real commits | Five reviews of real commits from four repositories (6 to 2,600 changed lines; plain review, `stamp`, `papertrail`, `loopholes`) on 2026-11-16. Of 16 findings checked by hand or by running the code, 15 held, one could not be settled and none was false. One review found two rules that undo each other's fix, which running the code confirmed; the `papertrail` review found no wrong claim, and running the documented examples confirmed that too. Each review of code took 10–22 minutes and $3.10–7.38; the 6-line commit took 6 minutes and $1.66. |
 | Ledger hook | 13 tests pass on Linux, Windows and macOS in CI |
 | Cost | About 350 tokens always loaded; about 3.7k for the skill and 2.6k for each critic when it runs (`claude plugin details vogon@vogon`) |
 
@@ -264,7 +265,7 @@ The lenses follow the pattern of Anthropic's own review plugin (`pr-review-toolk
 
 `vogon:critic` is the reviewer on its own: the same instructions the skill uses, with nothing around them.
 
-- **Read-only by construction.** It has Read, Grep, Glob and Bash, and no Edit or Write tools. Asked to fix something, it reports findings and leaves the fix to the caller.
+- **Read-only by construction.** It has Read, Grep, Glob and a shell (Bash, or PowerShell where that is the shell), and no Edit or Write tools. Asked to fix something, it reports findings and leaves the fix to the caller.
 - **Your model.** It inherits the model of whoever calls it.
 - **Starts only when named.** Claude delegates to it when you name it or another skill calls it, never by itself.
 - **Call it directly** ("ask the critic about the caching approach", or `@agent-vogon:critic`) for findings in its usual format, without verification, a ledger or a score. For those, use the skill.
@@ -315,7 +316,7 @@ Either three rounds have run, the target has passed about twice its starting len
 No. The plugin's hook (`hooks/allow-ledger.mjs`) answers "allow" for writes inside the current project's `.vogon/` folder, "deny" for a write over an existing ledger, and stays silent for everything else, so your normal rules apply to all other files. The hook runs with Node.js; without Node, it does nothing and you see the usual permission prompt once.
 
 **How long does it take?**
-A review takes a few minutes. Each fix round adds a focused re-review, which is shorter than the first review because it reads only the previous findings and the changed lines. Fix mode ends with one more full review, which took 2 to 3.5 minutes in our tests, against about 1.5 for the first. On our test plan, a whole fix run (first review, one or two rounds, final review) took 8 to 12 minutes.
+A review of a plan or a short document takes a few minutes; a review of a real code commit took 10 to 22 minutes in our tests, nearly all of it the critic reading and reasoning. Each fix round adds a focused re-review, which is shorter than the first review because it reads only the previous findings and the changed lines. Fix mode ends with one more full review, which took 2 to 3.5 minutes in our tests, against about 1.5 for the first. On our test plan, a whole fix run (first review, one or two rounds, final review) took 8 to 12 minutes.
 
 ## Project layout
 
