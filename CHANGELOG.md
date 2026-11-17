@@ -76,6 +76,14 @@ First release, as a Claude Code plugin with one skill and one agent.
   the earlier rounds. (This did not make it faster: it takes 140–210 seconds either way.)
 - The last fix round's focused re-review and the final full review are sent together, because
   nothing is fixed after either. This saves the re-review's 35–95 seconds: two test runs took 8 and 12 minutes, against 13–15 before.
+- Fix mode on code repairs or reverts a fix that fails the project's tests. When it cannot run them,
+  the reply's first line says `Tests: not run`, and a fix that changes how the code is run, built or
+  tested is left for the user instead of applied. In one fix run on a real commit the tests could not
+  be run: two of five fixes were wrong (one broke the test command), and the loop still reported 10
+  and a final 7, because neither re-review could run the tests either. In a second run on the same
+  commit the loop left the test command and the CI triggers as questions and reported 7 and a final 7;
+  one of its four applied fixes was still wrong, which only a test run against the upstream
+  repository shows.
 - A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,
