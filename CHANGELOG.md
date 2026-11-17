@@ -76,18 +76,23 @@ First release, as a Claude Code plugin with one skill and one agent.
   the earlier rounds. (This did not make it faster: it takes 140–210 seconds either way.)
 - The last fix round's focused re-review and the final full review are sent together, because
   nothing is fixed after either. This saves the re-review's 35–95 seconds: two test runs took 8 and 12 minutes, against 13–15 before.
-- Fix mode on code repairs or reverts a fix that fails the project's tests. When it cannot run them,
-  the reply's first line says `Tests: not run`, and a fix that changes how the code is run, built or
-  tested is left for the user instead of applied. In one fix run on a real commit the tests could not
-  be run: two of five fixes were wrong (one broke the test command), and the loop still reported 10
-  and a final 7, because neither re-review could run the tests either. In a second run on the same
-  commit the loop left the test command and the CI triggers as questions and reported 7 and a final 7;
-  one of its four applied fixes was still wrong, which only a test run against the upstream
-  repository shows.
+- Fix mode on code keeps a fix only if something it ran exercised the changed lines (a skipped test
+  checks nothing). It runs the tests before the first fix and after each round and repairs or reverts
+  a fix that turns a test red. In `fix auto` a code fix nothing exercised is undone and listed as a
+  proposal; with nothing runnable, no code fix is applied. On one real commit, runs that could not
+  run the tests kept 2 of 5, 1 of 4 and 1 of 3 wrong fixes, and the run that could kept none. On a
+  small module with planted bugs, two runs fixed all four and passed three hidden checks; with no
+  shell, the run changed no code.
+- Fix mode never undoes anything with git (`checkout`, `restore`, `reset`, `stash`, `clean`), which
+  would also discard the user's uncommitted work: one test run had used `git checkout -- .`.
+- The fix-mode reply leads with the final full review's score and shows the round scores as a trail;
+  a finding the re-review raises counts in that round's score. Round scores had come out at 10 twice
+  where the final review gave 7.
 - A logo, a plugin icon (`icon` in `plugin.json`, for Anthropic's plugin directory) and a mascot
   in `assets/`.
 - Test cases in the `claude plugin eval` layout: `fixes-plan-to-eight`, `reviews-planted-bugs`,
-  `stamp-blocks-bad-change`, `papertrail-finds-stale-docs`, `loopholes-finds-swallowed-error`, `ask-gives-quick-take` and `recheck-reads-ticked-answers`.
+  `stamp-blocks-bad-change`, `papertrail-finds-stale-docs`, `loopholes-finds-swallowed-error`, `ask-gives-quick-take`, `recheck-reads-ticked-answers`,
+  `fixes-code-keeps-tests-green` (with hidden checks in `verify/`) and `fix-auto-holds-code-without-tests`.
 
 [Unreleased]: https://github.com/vjfrosty/vogon/compare/v0.0.1...HEAD
 [0.0.1]: https://github.com/vjfrosty/vogon/releases/tag/v0.0.1

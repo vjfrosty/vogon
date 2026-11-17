@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: fixes-code-keeps-tests-green
+expected_outcome: |
+  Fix mode on code whose tests can run. Before the first fix the session runs the project's tests
+  (python -m unittest) and logs the result; it runs them again after each round. It fixes the
+  planted bugs in rate_limiter.py: the off-by-one that lets limit+1 requests through, the mutable
+  default argument that makes every RateLimiter share one history, and reset() raising KeyError for
+  an unknown client. The tests are green at the end, no fix that turned a test red is kept, and
+  nothing is committed. The reply's first line gives the final full review's score first, the round
+  scores as a trail, and a Tests part with the counts before and after. The hidden checks in
+  verify/test_hidden.py, run by hand after the case, all pass.
+context:
+  scaffold_script: place-files.sh

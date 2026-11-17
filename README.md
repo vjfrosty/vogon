@@ -34,14 +34,15 @@ It ships two parts:
 
 ## Status
 
-**Version 0.0.1, first public release, still being tuned.** What is tested, as of 2026-11-13:
+**Version 0.0.1, first public release, still being tuned.** What is tested, as of 2026-11-17:
 
 | Area | Result |
 |---|---|
 | Review, stamp and lenses | 4 test cases (planted bugs, a data-loss bug under `stamp`, stale docs, swallowed errors): all 17 checks passed, 2½–3½ minutes each |
 | Starting from plain words | 22 requests run at least twice: never started on the 11 that were not review requests; "what edge cases did I miss" is the weakest trigger |
 | Asking before it starts | Started from your own words, it asks once before any critic runs; naming vogon or typing the command skips the question |
-| Fix loop | On the deploy-plan test the fixes always improve the plan: a blind full review rated the original 1/10 and twelve fixed versions 4–6/10; none reached 8. Earlier versions of the loop overstated their result (two runs scored themselves 10 while a blind review gave 4 and 6), so the reported score now comes from a final full review. Six runs of the current loop (2026-11-16) reported 4 or 5; a blind review of the same plans gave 5 or 6. The first four took 13–15 minutes and $3.10–3.50; the last two, with the final review sent beside the last re-review, took 8 and 12 minutes and $2.36 and $3.05. The plans ended at 2.0 to 2.6 times their starting length: the growth limit of about double stops further rounds, but does not hold the plan to double. On code there are two runs (2026-11-17, the same 321-line test-suite and CI commit, 20 minutes and $4.76 and $5.18), and neither could run the tests. In the first the fix for the important finding was right, but two of the five fixes were wrong (one broke the test command), and the loop reported 10 with a final review of 7. The loop now says at the top of its reply when the tests were not run and leaves a fix that changes how code is run, built or tested to you. In the second run it did both: it left the test command and the CI triggers as questions and reported 7 with a final review of 7. One of its four applied fixes was still wrong (a test that fails against the real upstream repository), so run your tests before you commit what it changed |
+| Fix loop on plans | On the deploy-plan test the fixes always improve the plan: a blind full review rated the original 1/10 and thirteen fixed versions 4–6/10; none reached 8. Earlier versions of the loop overstated their result (two runs scored themselves 10 while a blind review gave 4 and 6), so the reported score now comes from a final full review. Seven runs of the current loop (2026-11-16 and 17) reported 4 or 5, and a blind review of the same plans gave 5 or 6; the latest took 11 minutes and $2.74 and scored 5 both ways. Runs take 8–15 minutes and $2.36–3.50. The plans ended at 2.0 to 2.6 times their starting length: the growth limit of about double stops further rounds, but does not hold the plan to double |
+| Fix loop on code | **Still being proven.** Four runs on one real 321-line commit (2026-11-17, about 20 minutes and $4.76–6.82 each). In the three where the tests could not run, 2 of 5, 1 of 4 and 1 of 3 applied fixes were wrong, one of them breaking the test command. In the one where they could, 0 of 5 were. So fix mode now keeps a code fix only if a run exercised it. With that rule, on a small Python module with four planted bugs, two runs fixed all four and wrote tests for them; three hidden checks the run never saw passed in both, and the suites were green in 8 of 8 re-runs (10–12 minutes, $2.89–3.13). With no shell allowed, it changed no code and listed every fix as a proposal (5 minutes, $1.56). One run undid its own edits with `git checkout`, which would also have discarded your uncommitted work; that is now forbidden, and the rule is not yet tested on code. Not yet tested with the new rule: real commits, and interactive `fix` |
 | Real commits | Five reviews of real commits from four repositories (6 to 2,600 changed lines; plain review, `stamp`, `papertrail`, `loopholes`) on 2026-11-16. Of 16 findings checked by hand or by running the code, 15 held, one could not be settled and none was false. One review found two rules that undo each other's fix, which running the code confirmed; the `papertrail` review found no wrong claim, and running the documented examples confirmed that too. Each review of code took 10–22 minutes and $3.10–7.38; the 6-line commit took 6 minutes and $1.66. |
 | Ledger hook | 13 tests pass on Linux, Windows and macOS in CI |
 | Cost | About 350 tokens always loaded; about 3.7k for the skill and 2.6k for each critic when it runs (`claude plugin details vogon@vogon`) |
@@ -152,11 +153,11 @@ flowchart TD
     K -->|stamp| ST["APPROVED: score ≥ 8, nothing important open<br/>DEMOLISHED: the findings that block it"]
     K -->|fix / fix auto| L{"Score ≥ 8, nothing left to fix,<br/>grown past double, or 3 rounds done?"}
     L -->|yes| FF["Final full review of the whole target<br/>by a fresh critic; its findings are listed, not fixed"]
-    FF --> S["Reply: score per round, the final review's score,<br/>word growth, what changed, proposals to confirm, what is left"]
+    FF --> S["Reply: the final review's score first, round scores as a trail,<br/>word growth, tests before and after, what changed, proposals to confirm, what is left"]
     L -->|no| N{"fix or fix auto?"}
     N -->|fix| O["Ask once per round: apply all · pick · stop<br/>round 1 asks your decisions first"]
     N -->|fix auto| P["Log the plan; questions for you<br/>become marked proposals"]
-    O --> Q["Fix each finding at its cause<br/>run tests for code"]
+    O --> Q["Fix each finding at its cause<br/>code: run the tests before and after,<br/>keep only fixes a run exercised"]
     P --> Q
     Q --> F["Focused re-review by a fresh critic<br/>previous findings + the diff only"]
     F --> V
@@ -170,8 +171,10 @@ Review mode never edits. Fix mode never commits. The first review reads the whol
 
 A fix loop in auto mode on a 30-line plan to move an API to a new server. The plan, as written, committed the production `.env` to git, opened Postgres to the internet, promised zero downtime while stopping the API for a 60 GB restore, and deleted the old server the same evening:
 
+Trimmed real output from a test run; its first line is shown in the current format, which puts the final review's score first:
+
 ```
-Fixes: 1 → 6 → 6 (round scores). Final full review: 5/10. Growth: 231 → 492 words.
+Final full review: 5/10 (rounds 1 → 6 → 6). Growth: 231 → 492 words.
 
 Ledger: .vogon/2026-11-16-deploy-plan.md
 
@@ -238,7 +241,7 @@ The score comes from the verified findings, by a fixed rule, so two runs on the 
 
 1. It plans the round: one line per fix, plus every question only you can answer.
 2. `fix` asks you once per round: apply all, pick some, or stop. The first round asks your decisions first, each question with two or three concrete options, and your answers count as settled for every later review. `fix auto` never asks: it logs the plan and turns each question into a marked proposal, taking the smaller, reversible option (`14 days (proposed — confirm)`).
-3. It fixes each finding at its cause, not only the sentence the finding quotes, along with whatever else relies on the same thing (a host, a secret, the order of steps), and runs your tests for code, repairing or reverting a fix that fails them. If it cannot run them, the reply's first line says the fixes are unverified, and a fix that changes how the code is run, built or tested is not applied: it is left for you in the To do list. It stays inside the findings and prefers rewording or removing to adding.
+3. It fixes each finding at its cause, not only the sentence the finding quotes, along with whatever else relies on the same thing (a host, a secret, the order of steps), and stays inside the findings, preferring rewording or removing to adding. **For code, it keeps a fix only if something it ran exercised it.** It runs your tests before the first fix and after each round, and repairs or reverts a fix that turns a test red. A skipped test checks nothing. A code fix that no test or command exercised is asked about in `fix`; in `fix auto` it is undone and listed as a proposal. When nothing can be run at all (no permission, no runner), it applies no code fix and still gives you the review. It never undoes anything with git, so your own uncommitted work is safe; it undoes its fixes with Edit.
 4. It logs the target's word count against the start after each round. Once the target has passed about twice its starting length, that round is the last: that much new text needs your read, not more fixes.
 5. A fresh critic does a **focused re-review**: it checks each previous finding and looks for new problems only in the lines that changed.
 
@@ -316,7 +319,7 @@ Either three rounds have run, the target has passed about twice its starting len
 No. The plugin's hook (`hooks/allow-ledger.mjs`) answers "allow" for writes inside the current project's `.vogon/` folder, "deny" for a write over an existing ledger, and stays silent for everything else, so your normal rules apply to all other files. The hook runs with Node.js; without Node, it does nothing and you see the usual permission prompt once.
 
 **How long does it take?**
-A review of a plan or a short document takes a few minutes; a review of a real code commit took 10 to 22 minutes in our tests, nearly all of it the critic reading and reasoning. Each fix round adds a focused re-review, which is shorter than the first review because it reads only the previous findings and the changed lines. Fix mode ends with one more full review, which took 2 to 3.5 minutes in our tests, against about 1.5 for the first. On our test plan, a whole fix run (first review, one or two rounds, final review) took 8 to 12 minutes.
+A review of a plan or a short document takes a few minutes; a review of a real code commit took 10 to 22 minutes in our tests, nearly all of it the critic reading and reasoning. Each fix round adds a focused re-review, which is shorter than the first review because it reads only the previous findings and the changed lines. Fix mode ends with one more full review, which took 2 to 3.5 minutes in our tests, against about 1.5 for the first. On our test plan, a whole fix run (first review, one or two rounds, final review) took 8 to 12 minutes; on a small Python module with tests, 10 to 12 minutes. A fix run on a real commit took about 20 minutes.
 
 ## Project layout
 
@@ -325,8 +328,9 @@ A review of a plan or a short document takes a few minutes; a review of a real c
 .claude-plugin/marketplace.json  lets the repo be added with /plugin marketplace add
 skills/vogon/SKILL.md            the skill: modes and words, resolve the target, gather settled decisions,
                                  call the critic, verify, score, archive, stamp
-skills/vogon/references/fix-loop.md  the fix loop, read only in fix mode: fixes at the cause, a
-                                 word-growth limit, at most three rounds, a final full review
+skills/vogon/references/fix-loop.md  the fix loop, read only in fix mode: fixes at the cause, code
+                                 fixes kept only when a run exercised them, a word-growth limit,
+                                 at most three rounds, a final full review
 agents/critic.md                 the critic agent: read-only tools, your model, the lenses, and the
                                  reviewer's instructions and output format (edit this to change what
                                  counts as important or which kinds of finding exist)
@@ -350,7 +354,13 @@ claude plugin validate .
 claude plugin eval . --allow-tools Write,Edit,Bash --scaffold
 ```
 
-The evals are real, billed model runs, with and without the plugin. CI checks the structure (the plugin and marketplace files, the skill and agent front matter, the command words and lenses, and the test case layout) and runs the hook's tests on Linux, Windows and macOS.
+The evals are real, billed model runs, with and without the plugin. `fixes-code-keeps-tests-green` also has hidden checks the run never sees; after a run, from its project folder:
+
+```bash
+PYTHONPATH=. python -m unittest discover -s <vogon>/evals/fixes-code-keeps-tests-green/verify -p "test_hidden.py"
+```
+
+All three fail on the original module and must pass on the fixed one. CI checks the structure (the plugin and marketplace files, the skill and agent front matter, the command words and lenses, and the test case layout) and runs the hook's tests on Linux, Windows and macOS.
 
 ## Licence
 

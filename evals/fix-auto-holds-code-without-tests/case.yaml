@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: fix-auto-holds-code-without-tests
+expected_outcome: |
+  Fix mode on code when no shell is allowed, so the tests cannot be run. The review is still made,
+  verified and scored, and the ledger is written. No .py file is changed: the intended code fixes
+  (the off-by-one, the shared default history, reset() on an unknown client) are listed as proposals
+  in the To do list, and their findings stay open. Near the top, the reply says the tests were not
+  run and that no code fix was applied. Prose may still be fixed.
+context:
+  scaffold_script: place-files.sh

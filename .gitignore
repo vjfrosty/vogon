@@ -1,2 +1,3 @@
 runs/
 evals/results/
+__pycache__/
